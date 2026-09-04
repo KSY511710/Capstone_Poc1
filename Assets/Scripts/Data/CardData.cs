@@ -20,13 +20,6 @@ public class CardData : ScriptableObject
     [Tooltip("배치 효과 — 결산 시 적용된다.")]
     [SerializeField] private List<CardEffect> effects = new();
 
-    [Tooltip("겹침 효과 — 다른 블록 위에 올라탔을 때 결산 시 1회만 적용된다.")]
-    [SerializeField] private List<CardEffect> overlapEffects = new();
-
-    [Tooltip("겹침 효과 설명 (UI 표시용)")]
-    [TextArea(2, 4)]
-    [SerializeField] private string overlapDescription = "";
-
     [HideInInspector]
     [SerializeField] private int width = 1;
 
@@ -39,9 +32,7 @@ public class CardData : ScriptableObject
     // ── Public Properties ──
     public string CardName => cardName;
     public string Description => description;
-    public string OverlapDescription => overlapDescription;
     public IReadOnlyList<CardEffect> Effects => effects;
-    public IReadOnlyList<CardEffect> OverlapEffects => overlapEffects;
 
     // {0} → effects[0].power, {1} → effects[1].power 치환
     public string FormattedDescription
@@ -51,18 +42,6 @@ public class CardData : ScriptableObject
             string text = description;
             for (int i = 0; i < effects.Count; i++)
                 text = text.Replace("{" + i + "}", effects[i].power.ToString());
-            return text;
-        }
-    }
-
-    // {0} → overlapEffects[0].power 치환
-    public string FormattedOverlapDescription
-    {
-        get
-        {
-            string text = overlapDescription;
-            for (int i = 0; i < overlapEffects.Count; i++)
-                text = text.Replace("{" + i + "}", overlapEffects[i].power.ToString());
             return text;
         }
     }
@@ -116,6 +95,44 @@ public class CardData : ScriptableObject
 
         var result = new (int, int, SymbolType)[count];
         System.Array.Copy(buffer, result, count);
+        return result;
+    }
+
+    /// <summary>
+    /// 시계방향으로 90도 × rotationSteps만큼 회전시킨 상태의 차지 칸 좌표 목록을 반환한다.
+    /// 첫 번째 칸(맨 위·맨 왼쪽 칸)을 회전 기준점으로 고정하고 나머지 칸이 그 주위를 돈다 —
+    /// 그래서 회전해도 기준 칸은 항상 마우스(그리드 배치 기준점) 아래 그대로 남는다.
+    /// 좌표는 기준 칸을 (0,0)으로 하는 상대좌표이며 음수가 나올 수 있다.
+    /// 원본 데이터는 건드리지 않는다 (드래그 중 QE 회전에 사용).
+    /// </summary>
+    public (int col, int row, SymbolType symbol)[] GetOccupiedCells(int rotationSteps)
+    {
+        var baseCells = GetOccupiedCells();
+        if (baseCells.Length == 0) return baseCells;
+
+        int steps = ((rotationSteps % 4) + 4) % 4;
+
+        // steps가 0이어도 기준 칸을 (0,0)으로 맞춘 상대좌표로 반환해야
+        // 다른 회전값과 좌표계가 일치해서 회전 시 블록이 튀지 않는다.
+        int pivotCol = baseCells[0].col;
+        int pivotRow = baseCells[0].row;
+
+        var result = new (int, int, SymbolType)[baseCells.Length];
+        for (int i = 0; i < baseCells.Length; i++)
+        {
+            int dc = baseCells[i].col - pivotCol;
+            int dr = baseCells[i].row - pivotRow;
+
+            for (int s = 0; s < steps; s++)
+            {
+                int newDc = -dr;
+                int newDr = dc;
+                dc = newDc;
+                dr = newDr;
+            }
+
+            result[i] = (dc, dr, baseCells[i].symbol);
+        }
         return result;
     }
 

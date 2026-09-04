@@ -8,4 +8,5 @@ public struct ResolutionResult
     public int heal;     // 플레이어 HP 회복량
     public int draw;     // 다음 턴 추가 드로우 매수
     public int drawNow;  // 즉시 드로우 매수
+    public int enemyAttackReduction; // 다음 적 턴 공격력 감소량 (1회성)
 }

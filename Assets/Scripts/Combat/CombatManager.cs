@@ -30,6 +30,7 @@ public class CombatManager : MonoBehaviour
     public int TurnCount => turnCount;
 
     private int extraDrawNextTurn;
+    private int enemyAttackReductionNextTurn;
     private bool enemyDeadAfterResolution;
     private bool resolutionComplete;
 
@@ -150,7 +151,9 @@ public class CombatManager : MonoBehaviour
 
         yield return new WaitForSeconds(enemyAttackDelay);
 
-        player.TakeDamage(enemyBaseDamage);
+        int damage = Mathf.Max(0, enemyBaseDamage - enemyAttackReductionNextTurn);
+        enemyAttackReductionNextTurn = 0;
+        player.TakeDamage(damage);
 
         if (player.IsDead)
         {
@@ -172,6 +175,7 @@ public class CombatManager : MonoBehaviour
         if (result.heal > 0)    player.Heal(result.heal);
         if (result.draw > 0)    extraDrawNextTurn += result.draw;
         if (result.drawNow > 0) deckManager.DrawCards(result.drawNow);
+        if (result.enemyAttackReduction > 0) enemyAttackReductionNextTurn += result.enemyAttackReduction;
 
         if (enemy.IsDead) TransitionTo(CombatState.Win);
     }
@@ -196,6 +200,7 @@ public class CombatManager : MonoBehaviour
         if (result.defense > 0) player.AddDefense(result.defense);
         if (result.heal > 0)    player.Heal(result.heal);
         if (result.draw > 0)    extraDrawNextTurn += result.draw;
+        if (result.enemyAttackReduction > 0) enemyAttackReductionNextTurn += result.enemyAttackReduction;
     }
 
     // 전체 결산 완료 — 손패 버리기 및 승패 기록

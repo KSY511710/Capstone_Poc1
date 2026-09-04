@@ -25,7 +25,6 @@ public class CardView : MonoBehaviour,
     [Header("UI 참조")]
     [SerializeField] private TextMeshProUGUI cardNameText;
     [SerializeField] private TextMeshProUGUI descriptionText;
-    [SerializeField] private TextMeshProUGUI overlapDescriptionText;
     [SerializeField] private Image cardImage;
     [SerializeField] private TextMeshProUGUI powerText;
     [SerializeField] private Image cardTypeIndicator;
@@ -48,6 +47,8 @@ public class CardView : MonoBehaviour,
     private bool isPlacementPhase;
 
     private BlockGhostView ghost;
+    private int currentRotation;      // 0~3, 시계방향 90도 단위 (드래그 중 QE로 변경)
+    private Vector2 lastDragScreenPos;
 
     // ═══════════════════════════════════════════
     //  Init
@@ -95,7 +96,6 @@ public class CardView : MonoBehaviour,
         {
             if (cardNameText != null) cardNameText.text = string.Empty;
             if (descriptionText != null) descriptionText.text = string.Empty;
-            if (overlapDescriptionText != null) overlapDescriptionText.text = string.Empty;
             if (powerText != null) powerText.text = string.Empty;
             ClearBlockPreview();
             return;
@@ -103,11 +103,6 @@ public class CardView : MonoBehaviour,
 
         if (cardNameText != null) cardNameText.text = data.CardName;
         if (descriptionText != null) descriptionText.text = data.FormattedDescription;
-        if (overlapDescriptionText != null)
-        {
-            overlapDescriptionText.text = data.FormattedOverlapDescription;
-            overlapDescriptionText.gameObject.SetActive(!string.IsNullOrEmpty(data.OverlapDescription));
-        }
         if (powerText != null)    powerText.text    = data.BasePower.ToString();
 
         if (cardTypeIndicator != null)
@@ -130,6 +125,8 @@ public class CardView : MonoBehaviour,
         canvasGroup.alpha          = 0.35f;
         canvasGroup.blocksRaycasts = false;
 
+        currentRotation = 0;
+        lastDragScreenPos = eventData.position;
         SpawnGhost(eventData.position);
     }
 
@@ -137,15 +134,38 @@ public class CardView : MonoBehaviour,
     {
         if (ghost == null) return;
 
+        lastDragScreenPos = eventData.position;
         ghost.UpdatePosition(eventData.position);
+        RefreshPreview(eventData.position);
+    }
 
-        var (gx, gy) = gridView.ScreenToGridCoords(eventData.position);
+    // 드래그 중 QE로 블록 회전
+    private void Update()
+    {
+        if (ghost == null) return;
+
+        if (Input.GetKeyDown(KeyCode.Q))
+            Rotate(-1);
+        else if (Input.GetKeyDown(KeyCode.E))
+            Rotate(1);
+    }
+
+    private void Rotate(int delta)
+    {
+        currentRotation = ((currentRotation + delta) % 4 + 4) % 4;
+        ghost.Rebuild(currentCardData, gridView.CellSize, currentRotation);
+        RefreshPreview(lastDragScreenPos);
+    }
+
+    private void RefreshPreview(Vector2 screenPos)
+    {
+        var (gx, gy) = gridView.ScreenToGridCoords(screenPos);
 
         if (gx >= 0)
         {
-            bool canPlace = gridManager.CanPlaceBlock(currentCardData, gx, gy);
+            bool canPlace = gridManager.CanPlaceBlock(currentCardData, gx, gy, currentRotation);
             ghost.SetValidity(canPlace);
-            gridView.ShowPreview(currentCardData, gx, gy);
+            gridView.ShowPreview(currentCardData, gx, gy, currentRotation);
         }
         else
         {
@@ -162,7 +182,7 @@ public class CardView : MonoBehaviour,
         gridView.ClearPreview();
 
         var (gx, gy) = gridView.ScreenToGridCoords(eventData.position);
-        bool placed  = gx >= 0 && gridManager.TryPlaceBlock(currentCardData, gx, gy);
+        bool placed  = gx >= 0 && gridManager.TryPlaceBlock(currentCardData, gx, gy, currentRotation);
 
         if (placed)
         {
@@ -194,7 +214,7 @@ public class CardView : MonoBehaviour,
         go.transform.SetParent(rootCanvas.transform, false);
 
         ghost = go.GetComponent<BlockGhostView>();
-        ghost.Setup(currentCardData, gridView.CellSize);
+        ghost.Setup(currentCardData, gridView.CellSize, currentRotation);
         ghost.UpdatePosition(startPos);
     }
 

@@ -50,8 +50,6 @@ public class CardDataEditor : Editor
     private SerializedProperty propCardName;
     private SerializedProperty propDescription;
     private SerializedProperty propEffects;
-    private SerializedProperty propOverlapEffects;
-    private SerializedProperty propOverlapDescription;
 
     private void OnEnable()
     {
@@ -64,8 +62,6 @@ public class CardDataEditor : Editor
         propCardName         = serializedObject.FindProperty("cardName");
         propDescription      = serializedObject.FindProperty("description");
         propEffects             = serializedObject.FindProperty("effects");
-        propOverlapEffects      = serializedObject.FindProperty("overlapEffects");
-        propOverlapDescription  = serializedObject.FindProperty("overlapDescription");
     }
 
     public override void OnInspectorGUI()
@@ -90,11 +86,6 @@ public class CardDataEditor : Editor
         EditorGUILayout.Space(4);
         DrawSectionHeader("⚔️ 배치 효과");
         EditorGUILayout.PropertyField(propEffects, true);
-
-        EditorGUILayout.Space(4);
-        DrawSectionHeader("💥 겹침 효과 (1회 발동)");
-        EditorGUILayout.PropertyField(propOverlapDescription);
-        EditorGUILayout.PropertyField(propOverlapEffects, true);
 
         EditorGUILayout.Space(12);
 

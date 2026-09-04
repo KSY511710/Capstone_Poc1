@@ -66,15 +66,15 @@ public class GridView : MonoBehaviour
     /// <summary>
     /// 드래그 중 배치 미리보기를 표시한다. 배치 가능하면 초록, 불가면 빨강.
     /// </summary>
-    public void ShowPreview(CardData card, int originX, int originY)
+    public void ShowPreview(CardData card, int originX, int originY, int rotationSteps = 0)
     {
         RefreshGrid(); // 기존 상태 먼저 복원
 
         if (card == null) return;
 
-        bool canPlace = gridManager.CanPlaceBlock(card, originX, originY);
+        bool canPlace = gridManager.CanPlaceBlock(card, originX, originY, rotationSteps);
 
-        foreach (var (col, row, symbol) in card.GetOccupiedCells())
+        foreach (var (col, row, symbol) in card.GetOccupiedCells(rotationSteps))
         {
             int gx = originX + col;
             int gy = originY + row;

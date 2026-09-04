@@ -144,15 +144,12 @@ namespace Cyg.UI
             if (registeredCards.Count == 0)
                 return emptyListText;
 
-            var blockPreviews = gridManager != null ? gridManager.GetPlacedBlockPreviews() : null;
             string hexColor = ColorUtility.ToHtmlStringRGB(activeSpellColor);
             var builder = new StringBuilder(256);
             for (int i = 0; i < registeredCards.Count; i++)
             {
                 CardData card = registeredCards[i];
                 bool isResolving = i == resolvingIndex;
-                int bonusDmg = (blockPreviews != null && i < blockPreviews.Length) ? blockPreviews[i].bonusDamage  : 0;
-                int bonusDef = (blockPreviews != null && i < blockPreviews.Length) ? blockPreviews[i].bonusDefense : 0;
 
                 if (isResolving) builder.Append($"<color=#{hexColor}>");
 
@@ -162,7 +159,7 @@ namespace Cyg.UI
 
                 if (card != null)
                 {
-                    string desc = BuildDescriptionWithBonus(card, bonusDmg, bonusDef);
+                    string desc = card.FormattedDescription;
                     if (!string.IsNullOrWhiteSpace(desc))
                     {
                         builder.Append("  ");
@@ -170,25 +167,12 @@ namespace Cyg.UI
                     }
                     else
                     {
-                        int attackCount  = 0;
-                        int defenseCount = 0;
-                        foreach (var e in card.Effects)
-                        {
-                            if (e.effectType == CardType.Attack || e.effectType == CardType.Drain) attackCount++;
-                            if (e.effectType == CardType.Defense) defenseCount++;
-                        }
-                        int perAttack  = attackCount  > 0 ? bonusDmg / attackCount  : 0;
-                        int perDefense = defenseCount > 0 ? bonusDef / defenseCount : 0;
-
                         foreach (var effect in card.Effects)
                         {
-                            int power = effect.power;
-                            if (effect.effectType == CardType.Attack || effect.effectType == CardType.Drain) power += perAttack;
-                            if (effect.effectType == CardType.Defense) power += perDefense;
                             builder.Append("  ");
                             builder.Append(GetEffectLabel(effect.effectType));
                             builder.Append(" ");
-                            builder.Append(power);
+                            builder.Append(effect.power);
                         }
                     }
                 }
@@ -202,33 +186,6 @@ namespace Cyg.UI
             return builder.ToString();
         }
 
-        private static string BuildDescriptionWithBonus(CardData card, int bonusDmg, int bonusDef)
-        {
-            string text = card.Description;
-            if (string.IsNullOrWhiteSpace(text)) return string.Empty;
-
-            var effects = card.Effects;
-            int attackCount  = 0;
-            int defenseCount = 0;
-            foreach (var e in effects)
-            {
-                if (e.effectType == CardType.Attack || e.effectType == CardType.Drain) attackCount++;
-                if (e.effectType == CardType.Defense) defenseCount++;
-            }
-            int perAttack  = attackCount  > 0 ? bonusDmg / attackCount  : 0;
-            int perDefense = defenseCount > 0 ? bonusDef / defenseCount : 0;
-
-            for (int i = 0; i < effects.Count; i++)
-            {
-                int power = effects[i].power;
-                var type  = effects[i].effectType;
-                if (type == CardType.Attack || type == CardType.Drain) power += perAttack;
-                if (type == CardType.Defense)                          power += perDefense;
-                text = text.Replace("{" + i + "}", power.ToString());
-            }
-            return text;
-        }
-
         private static string GetEffectLabel(CardType type) => type switch
         {
             CardType.Attack  => "공격",
@@ -237,10 +194,6 @@ namespace Cyg.UI
             CardType.Drain   => "흡수",
             CardType.Draw               => "드로우(다음턴)",
             CardType.DrawNow            => "드로우(즉시)",
-            CardType.OverlapBoostAttack    => "겹침공격증가",
-            CardType.OverlapBoostDefense   => "겹침방어증가",
-            CardType.BoostResolutionDamage  => "결산공격증가",
-            CardType.BoostResolutionDefense => "결산방어증가",
             _                              => type.ToString(),
         };
 

@@ -17,10 +17,6 @@ MonoBehaviour:
   effects:
   - effectType: 1
     power: 0
-  overlapEffects:
-  - effectType: 11
-    power: 5
-  overlapDescription: "\uACB0\uC0B0 \uBC29\uC5B4\uB3C4\uAC00 {0} \uC99D\uAC00\uD569\uB2C8\uB2E4."
   width: 1
   height: 1
   symbols: 01000000

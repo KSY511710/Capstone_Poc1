@@ -82,7 +82,15 @@ public class GridCellView : MonoBehaviour
             overlapLabel.color = willOverlap ? colorOverlap : Color.white;
         }
 
-        ApplyOutline(canPlace ? (willOverlap ? colorOverlap : colorValid) : colorInvalid);
+        if (!canPlace)
+        {
+            ApplyOutline(colorInvalid);
+        }
+        else
+        {
+            int resultingCount = currentOverlapCount + 1; // 1=최초 배치, 2=첫 겹침, 3=최대(더 이상 못 쌓음)
+            ApplyOutline(GetStackColor(resultingCount));
+        }
     }
 
     public void Refresh(SymbolType symbol, int overlapCount)
@@ -105,10 +113,10 @@ public class GridCellView : MonoBehaviour
             overlapCount > 1 ? 0.95f : occupiedAlpha
         );
 
-        if (overlapCount > 1)
-            ApplyOutline(colorOverlap);
-        else
+        if (overlapCount <= 0)
             ClearOutline();
+        else
+            ApplyOutline(GetStackColor(overlapCount)); // 1=초록(최초), 2=노랑(첫 겹침), 3=빨강(최대)
 
         if (symbolLabel != null)
         {
@@ -122,6 +130,14 @@ public class GridCellView : MonoBehaviour
             overlapLabel.color = overlapCount > 1 ? colorOverlap : Color.white;
         }
     }
+
+    /// <summary> 칸에 쌓인 개수(1~3)에 따른 아웃라인 색. 1=초록, 2=노랑, 3(이상)=빨강(최대, 더 못 쌓음). </summary>
+    private static Color GetStackColor(int count) => count switch
+    {
+        1 => colorValid,
+        2 => colorOverlap,
+        _ => colorInvalid,
+    };
 
     private void EnsureReferences()
     {

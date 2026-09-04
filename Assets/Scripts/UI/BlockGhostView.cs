@@ -20,14 +20,31 @@ public class BlockGhostView : MonoBehaviour
     /// </summary>
     /// <param name="card">카드 데이터 (블록 형태 포함)</param>
     /// <param name="cellSize">그리드 셀 한 칸의 픽셀 크기</param>
-    public void Setup(CardData card, float cellSize)
+    /// <param name="rotationSteps">시계방향 90도 단위 회전 횟수</param>
+    public void Setup(CardData card, float cellSize, int rotationSteps = 0)
     {
         // 레이캐스트를 통과시켜 그리드 셀 감지가 막히지 않도록
         var cg = GetComponent<CanvasGroup>();
         cg.blocksRaycasts = false;
         cg.interactable   = false;
 
-        var occupied = card.GetOccupiedCells();
+        BuildTiles(card, cellSize, rotationSteps);
+        SetValidity(true);
+    }
+
+    /// <summary> 회전(QE) 등으로 모양이 바뀌었을 때 타일을 다시 만든다. </summary>
+    public void Rebuild(CardData card, float cellSize, int rotationSteps)
+    {
+        BuildTiles(card, cellSize, rotationSteps);
+        SetValidity(true);
+    }
+
+    private void BuildTiles(CardData card, float cellSize, int rotationSteps)
+    {
+        for (int i = transform.childCount - 1; i >= 0; i--)
+            Destroy(transform.GetChild(i).gameObject);
+
+        var occupied = card.GetOccupiedCells(rotationSteps);
         tiles      = new Image[occupied.Length];
         baseColors = new Color[occupied.Length];
 
@@ -47,8 +64,6 @@ public class BlockGhostView : MonoBehaviour
             tiles[i]      = tileGo.GetComponent<Image>();
             baseColors[i] = SymbolVisuals.GetColor(symbol);
         }
-
-        SetValidity(true);
     }
 
     // ═══════════════════════════════════════════

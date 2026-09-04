@@ -67,5 +67,5 @@
         "*.sln": "*.csproj",
         "*.slnx": "*.csproj"
     },
-    "dotnet.defaultSolution": "Week09_Poc.slnx"
+    "dotnet.defaultSolution": "Capstone_Poc1.slnx"
 }

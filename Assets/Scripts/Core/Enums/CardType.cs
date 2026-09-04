@@ -11,24 +11,5 @@ public enum CardType
     Drain,      // 적에게 데미지 + 자신 HP 회복
     Draw,       // 다음 턴 추가 드로우 (power = 드로우 매수)
     DrawNow,    // 즉시 드로우 (power = 드로우 매수)
-
-    // ── 겹치기 효과 전용 (OverlapEffects 리스트에서만 사용) ──
-
-    /// <summary>겹친 공격 카드의 결산 피해량을 power만큼 증가시킨다.</summary>
-    OverlapBoostAttack,
-
-    /// <summary>겹친 방어 카드의 결산 방어도를 power만큼 증가시킨다.</summary>
-    OverlapBoostDefense,
-
-    /// <summary>겹친 카드의 겹치기 효과가 한 번 더 발동된다. (중첩 불가)</summary>
-    DoubleOverlapEffect,
-
-    /// <summary>겹친 카드의 결산 효과를 즉시 발동시킨다.</summary>
-    TriggerResolutionNow,
-
-    /// <summary>이 카드의 결산 피해량이 power만큼 추가된다. (겹침 시 발동)</summary>
-    BoostResolutionDamage,
-
-    /// <summary>이 카드의 결산 방어도가 power만큼 추가된다. (겹침 시 발동)</summary>
-    BoostResolutionDefense,
+    WeakenEnemyAttack, // 다음 적 턴의 공격력을 감소시킴 (power = 감소량, 1회성)
 }
