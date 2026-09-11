@@ -35,6 +35,7 @@ public class CardView : MonoBehaviour,
 
     private static readonly Color attackColor  = new(0.85f, 0.25f, 0.25f, 1f);
     private static readonly Color defenseColor = new(0.25f, 0.45f, 0.85f, 1f);
+    private static readonly Color drawColor    = new(0.25f, 0.75f, 0.35f, 1f);
 
     // ── Runtime ──
     [Header("Runtime Debug")]
@@ -105,11 +106,18 @@ public class CardView : MonoBehaviour,
         if (descriptionText != null) descriptionText.text = data.FormattedDescription;
         if (powerText != null)    powerText.text    = data.BasePower.ToString();
 
-        if (cardTypeIndicator != null)
-            cardTypeIndicator.color = data.Type == CardType.Attack ? attackColor : defenseColor;
+        if (cardImage != null)
+            cardImage.color = GetTypeColor(data.Type);
 
         BuildBlockPreview(data);
     }
+
+    private static Color GetTypeColor(CardType type) => type switch
+    {
+        CardType.Attack  => attackColor,
+        CardType.DrawNow => drawColor,
+        _                => defenseColor,
+    };
 
     // ═══════════════════════════════════════════
     //  Drag Handlers
@@ -146,7 +154,7 @@ public class CardView : MonoBehaviour,
 
         if (Input.GetKeyDown(KeyCode.Q))
             Rotate(-1);
-        else if (Input.GetKeyDown(KeyCode.E))
+        else if (Input.GetKeyDown(KeyCode.E)||Input.GetMouseButtonDown(1))
             Rotate(1);
     }
 

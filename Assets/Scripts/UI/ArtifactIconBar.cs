@@ -22,7 +22,7 @@ public class ArtifactIconBar : MonoBehaviour
     [SerializeField] private bool findArtifactManagerOnEnable = true;
 
     [Header("Layout")]
-    [SerializeField] private float iconSize = 48f;
+    [SerializeField] private float iconSize = 100f;
     [SerializeField] private float iconSpacing = 8f;
 
     [Header("Text")]

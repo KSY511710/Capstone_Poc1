@@ -13,10 +13,6 @@ public class CombatManager : MonoBehaviour
     public int EnemyBaseDamage => enemyBaseDamage;
 
     [Header("페이즈 딜레이")]
-    [Tooltip("턴 종료 후 결산 시작까지 대기")]
-    [SerializeField] private float resolutionDelay = 0.5f;
-    [Tooltip("결산 결과 보여주는 시간")]
-    [SerializeField] private float resolutionDisplayTime = 1f;
     [Tooltip("적 공격 전 대기")]
     [SerializeField] private float enemyAttackDelay = 1f;
     [Tooltip("적 공격 후 다음 턴까지 대기")]
@@ -31,8 +27,6 @@ public class CombatManager : MonoBehaviour
 
     private int extraDrawNextTurn;
     private int enemyAttackReductionNextTurn;
-    private bool enemyDeadAfterResolution;
-    private bool resolutionComplete;
 
     // ═══════════════════════════════════════════
     //  Unity Lifecycle
@@ -41,17 +35,15 @@ public class CombatManager : MonoBehaviour
     private void OnEnable()
     {
         GameEvents.OnTurnEndRequested       += HandleTurnEndRequested;
-        GameEvents.OnResolutionResult       += HandleResolutionResult;
-        GameEvents.OnResolutionComplete     += HandleResolutionComplete;
         GameEvents.OnOverlapEffectTriggered += HandleOverlapEffectTriggered;
+        GameEvents.OnCardEffectTriggered    += HandleCardEffectTriggered;
     }
 
     private void OnDisable()
     {
         GameEvents.OnTurnEndRequested       -= HandleTurnEndRequested;
-        GameEvents.OnResolutionResult       -= HandleResolutionResult;
-        GameEvents.OnResolutionComplete     -= HandleResolutionComplete;
         GameEvents.OnOverlapEffectTriggered -= HandleOverlapEffectTriggered;
+        GameEvents.OnCardEffectTriggered    -= HandleCardEffectTriggered;
     }
 
     // ═══════════════════════════════════════════
@@ -82,7 +74,6 @@ public class CombatManager : MonoBehaviour
         {
             case CombatState.PlayerDraw: EnterPlayerDraw(); break;
             case CombatState.Placement:  EnterPlacement();  break;
-            case CombatState.Resolution: EnterResolution(); break;
             case CombatState.EnemyTurn:  EnterEnemyTurn();  break;
             case CombatState.Win:
             case CombatState.Lose:       EnterCombatEnd(newState == CombatState.Win); break;
@@ -109,11 +100,6 @@ public class CombatManager : MonoBehaviour
         GameEvents.RaisePlacementPhaseStarted();
     }
 
-    private void EnterResolution()
-    {
-        StartCoroutine(ResolutionRoutine());
-    }
-
     private void EnterEnemyTurn()
     {
         StartCoroutine(EnemyTurnRoutine());
@@ -126,24 +112,6 @@ public class CombatManager : MonoBehaviour
     }
 
     // ─── Coroutines ───
-
-    private IEnumerator ResolutionRoutine()
-    {
-        yield return new WaitForSeconds(resolutionDelay);
-
-        resolutionComplete = false;
-        GameEvents.RaiseResolutionPhaseStarted();
-
-        // 블록들이 하나씩 결산 완료될 때까지 대기
-        yield return new WaitUntil(() => resolutionComplete);
-
-        yield return new WaitForSeconds(resolutionDisplayTime);
-
-        if (enemyDeadAfterResolution)
-            TransitionTo(CombatState.Win);
-        else
-            TransitionTo(CombatState.EnemyTurn);
-    }
 
     private IEnumerator EnemyTurnRoutine()
     {
@@ -180,6 +148,20 @@ public class CombatManager : MonoBehaviour
         if (enemy.IsDead) TransitionTo(CombatState.Win);
     }
 
+    // 카드 배치 즉시(즉발) 발생한 효과를 상태와 무관하게 바로 반영한다.
+    // HandleOverlapEffectTriggered(아티팩트 즉발)와 동일한 처리 방식이다.
+    private void HandleCardEffectTriggered(ResolutionResult result)
+    {
+        if (result.damage > 0)  enemy.TakeDamage(result.damage);
+        if (result.defense > 0) player.AddDefense(result.defense);
+        if (result.heal > 0)    player.Heal(result.heal);
+        if (result.draw > 0)    extraDrawNextTurn += result.draw;
+        if (result.drawNow > 0) deckManager.DrawCards(result.drawNow);
+        if (result.enemyAttackReduction > 0) enemyAttackReductionNextTurn += result.enemyAttackReduction;
+
+        if (enemy.IsDead) TransitionTo(CombatState.Win);
+    }
+
     private void HandleTurnEndRequested()
     {
         if (currentState != CombatState.Placement)
@@ -188,26 +170,9 @@ public class CombatManager : MonoBehaviour
             return;
         }
 
-        TransitionTo(CombatState.Resolution);
-    }
-
-    // 블록 하나씩 결산 결과 수신 — 수치만 반영
-    private void HandleResolutionResult(ResolutionResult result)
-    {
-        if (currentState != CombatState.Resolution) return;
-
-        if (result.damage > 0)  enemy.TakeDamage(result.damage);
-        if (result.defense > 0) player.AddDefense(result.defense);
-        if (result.heal > 0)    player.Heal(result.heal);
-        if (result.draw > 0)    extraDrawNextTurn += result.draw;
-        if (result.enemyAttackReduction > 0) enemyAttackReductionNextTurn += result.enemyAttackReduction;
-    }
-
-    // 전체 결산 완료 — 손패 버리기 및 승패 기록
-    private void HandleResolutionComplete()
-    {
         deckManager.DiscardHand();
-        enemyDeadAfterResolution = enemy.IsDead;
-        resolutionComplete = true;
+
+        if (enemy.IsDead) TransitionTo(CombatState.Win);
+        else TransitionTo(CombatState.EnemyTurn);
     }
 }

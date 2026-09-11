@@ -52,6 +52,8 @@ public static class GameEvents
     public static event Action OnResolutionComplete;
     /// <summary> 블록 겹침 시 즉시 발동하는 효과 발행 (아티팩트 발동 결과) </summary>
     public static event Action<ResolutionResult> OnOverlapEffectTriggered;
+    /// <summary> 카드를 배치하는 즉시(연출 대기 없이) 발동하는 카드 효과 결과 </summary>
+    public static event Action<ResolutionResult> OnCardEffectTriggered;
     /// <summary> 그리드 배치 중 특정 색상이 겹쳤을 때 발행 (겹친 색, 겹친 칸 수) — 아티팩트 진행도 누적용 </summary>
     public static event Action<SymbolType, int> OnGridColorOverlapped;
     /// <summary> 아티팩트의 색상별 진행도가 바뀌었을 때 발행 (아티팩트, 색상, 현재 카운트, 요구 카운트) — UI 표시용 </summary>
@@ -97,6 +99,7 @@ public static class GameEvents
     public static void RaiseResolutionResult(ResolutionResult result) => OnResolutionResult?.Invoke(result);
     public static void RaiseResolutionComplete() => OnResolutionComplete?.Invoke();
     public static void RaiseOverlapEffectTriggered(ResolutionResult result) => OnOverlapEffectTriggered?.Invoke(result);
+    public static void RaiseCardEffectTriggered(ResolutionResult result) => OnCardEffectTriggered?.Invoke(result);
     public static void RaiseGridColorOverlapped(SymbolType color, int count) => OnGridColorOverlapped?.Invoke(color, count);
     public static void RaiseArtifactProgressChanged(ArtifactData artifact, SymbolType color, int current, int required) => OnArtifactProgressChanged?.Invoke(artifact, color, current, required);
     public static void RaiseDamageDealtToEnemy(int damage) => OnDamageDealtToEnemy?.Invoke(damage);
@@ -127,6 +130,7 @@ public static class GameEvents
         OnResolutionResult = null;
         OnResolutionComplete = null;
         OnOverlapEffectTriggered = null;
+        OnCardEffectTriggered = null;
         OnGridColorOverlapped = null;
         OnArtifactProgressChanged = null;
         OnDamageDealtToEnemy = null;

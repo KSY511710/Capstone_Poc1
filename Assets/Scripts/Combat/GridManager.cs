@@ -1,4 +1,3 @@
-using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -6,10 +5,6 @@ public class GridManager : MonoBehaviour
 {
     public const int GridSize = 3;
     public const int MaxOverlapPerCell = 3;
-
-    [Header("연출")]
-    [Tooltip("블록 하나 결산 후 다음 블록까지 대기 시간")]
-    [SerializeField] private float blockResolveDelay = 0.4f;
 
     // ── Grid State ──
     private readonly SymbolType[,] grid = new SymbolType[GridSize, GridSize];
@@ -36,14 +31,12 @@ public class GridManager : MonoBehaviour
 
     private void OnEnable()
     {
-        GameEvents.OnDrawPhaseStarted       += HandleDrawPhaseStarted;
-        GameEvents.OnResolutionPhaseStarted += HandleResolutionPhaseStarted;
+        GameEvents.OnDrawPhaseStarted += HandleDrawPhaseStarted;
     }
 
     private void OnDisable()
     {
-        GameEvents.OnDrawPhaseStarted       -= HandleDrawPhaseStarted;
-        GameEvents.OnResolutionPhaseStarted -= HandleResolutionPhaseStarted;
+        GameEvents.OnDrawPhaseStarted -= HandleDrawPhaseStarted;
     }
 
     // ═══════════════════════════════════════════
@@ -103,6 +96,7 @@ public class GridManager : MonoBehaviour
 
         placedBlocks.Add(new PlacedBlock { card = card, originX = originX, originY = originY });
         GameEvents.RaiseBlockPlaced(card, originX, originY);
+        TriggerCardEffectInstantly(card);
 
         // 3. 색상별 겹침 카운트를 아티팩트 시스템(ArtifactManager)에 전달
         foreach (var kvp in overlapByColor)
@@ -112,35 +106,24 @@ public class GridManager : MonoBehaviour
         return true;
     }
 
+    // 방금 배치된 카드의 CardEffect들을 계산해 즉시(연출 대기 없이) 결과를 발행한다.
+    // ArtifactManager가 겹침 발생 시 즉발로 처리하는 것과 동일한 패턴 — 배치 순간
+    // 동기적으로 EffectResolver를 돌려 그 자리에서 GameEvents로 통지한다.
+    private void TriggerCardEffectInstantly(CardData card)
+    {
+        var result = new ResolutionResult();
+        foreach (var effect in card.Effects)
+            EffectResolver.Apply(ref result, effect);
+
+        GameEvents.RaiseCardEffectTriggered(result);
+    }
+
     // ═══════════════════════════════════════════
     //  Private
     // ═══════════════════════════════════════════
 
     /// <summary> UI 미리보기용 — 현재 배치 기준 합산 결과 반환. 이벤트 발행 없음. </summary>
     public ResolutionResult GetPreview() => Calculate();
-
-    private void CalculateAndRaiseResolution()
-    {
-        StartCoroutine(BlockResolutionRoutine());
-    }
-
-    private IEnumerator BlockResolutionRoutine()
-    {
-        foreach (var pb in placedBlocks)
-        {
-            var result = new ResolutionResult();
-            foreach (var effect in pb.card.Effects)
-                EffectResolver.Apply(ref result, effect);
-
-            Debug.Log($"[GridManager] {pb.card.CardName} 결산 — 공격 {result.damage}, 방어 {result.defense}, 회복 {result.heal}, 드로우 +{result.draw}");
-            GameEvents.RaiseResolutionResult(result);
-
-            yield return new WaitForSeconds(blockResolveDelay);
-        }
-
-        ClearGrid();
-        GameEvents.RaiseResolutionComplete();
-    }
 
     private ResolutionResult Calculate()
     {
@@ -167,5 +150,4 @@ public class GridManager : MonoBehaviour
     // ─── Event Handlers ───
 
     private void HandleDrawPhaseStarted(int _) => ClearGrid();
-    private void HandleResolutionPhaseStarted() => CalculateAndRaiseResolution();
 }
