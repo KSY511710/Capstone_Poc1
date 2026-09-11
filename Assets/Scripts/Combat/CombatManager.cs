@@ -12,6 +12,10 @@ public class CombatManager : MonoBehaviour
     [SerializeField] private int enemyBaseDamage = 8;
     public int EnemyBaseDamage => enemyBaseDamage;
 
+    [Header("드로우 설정")]
+    [Tooltip("전투 시작 시 첫 손패로 드로우할 장수")]
+    [SerializeField] private int initialHandSize = 6;
+
     [Header("페이즈 딜레이")]
     [Tooltip("적 공격 전 대기")]
     [SerializeField] private float enemyAttackDelay = 1f;
@@ -29,6 +33,10 @@ public class CombatManager : MonoBehaviour
     private int enemyAttackReductionNextTurn;
     private bool enemyDeadAfterResolution;
     private bool resolutionComplete;
+
+    // 다음 턴에 드로우할 기본 장수. deckManager.DrawCountPerTurn을 매번 직접 읽는 대신
+    // 턴이 종료되는 시점에 이 값에 저장해두고, 다음 드로우 페이즈는 이 값을 사용한다.
+    private int nextTurnDrawCount;
 
     // ═══════════════════════════════════════════
     //  Unity Lifecycle
@@ -60,6 +68,7 @@ public class CombatManager : MonoBehaviour
     {
         turnCount = 0;
         deckManager.Initialize();
+        nextTurnDrawCount = initialHandSize;
         GameEvents.RaiseCombatStarted();
         TransitionTo(CombatState.PlayerDraw);
     }
@@ -94,7 +103,7 @@ public class CombatManager : MonoBehaviour
         turnCount++;
         player.ResetDefense();
 
-        int drawCount = deckManager.DrawCountPerTurn + extraDrawNextTurn;
+        int drawCount = nextTurnDrawCount + extraDrawNextTurn;
         extraDrawNextTurn = 0;
 
         GameEvents.RaiseDrawPhaseStarted(drawCount);
@@ -196,6 +205,9 @@ public class CombatManager : MonoBehaviour
             return;
         }
 
+        // 턴 종료 시점에 다음 턴 드로우 장수를 결정해 저장해둔다.
+        nextTurnDrawCount = deckManager.DrawCountPerTurn;
+
         TransitionTo(CombatState.Resolution);
     }
 
@@ -206,10 +218,9 @@ public class CombatManager : MonoBehaviour
         if (currentState != CombatState.Resolution) return;
     }
 
-    // 전체 결산 완료 — 손패 버리기 및 승패 기록
+    // 전체 결산 완료 — 승패 기록 (손패는 더 이상 턴마다 버리지 않고 유지된다)
     private void HandleResolutionComplete()
     {
-        deckManager.DiscardHand();
         enemyDeadAfterResolution = enemy.IsDead;
         resolutionComplete = true;
     }

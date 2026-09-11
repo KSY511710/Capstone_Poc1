@@ -18,13 +18,11 @@ public class HandView : MonoBehaviour
     private void OnEnable()
     {
         GameEvents.OnCardDrawn += HandleCardDrawn;
-        GameEvents.OnDrawPhaseStarted += HandleDrawPhaseStarted;
     }
 
     private void OnDisable()
     {
         GameEvents.OnCardDrawn -= HandleCardDrawn;
-        GameEvents.OnDrawPhaseStarted -= HandleDrawPhaseStarted;
     }
 
     private void HandleCardDrawn(CardData cardData)
@@ -37,16 +35,6 @@ public class HandView : MonoBehaviour
 
         CardView newCard = Instantiate(cardPrefab, handContainer);
         newCard.Setup(cardData);
-    }
-
-    private void HandleDrawPhaseStarted(int _)
-    {
-        ClearHandUI();
-    }
-
-    private void ClearHandUI()
-    {
-        foreach (Transform child in handContainer)
-            Destroy(child.gameObject);
+        newCard.PlayDrawInAnimation();
     }
 }

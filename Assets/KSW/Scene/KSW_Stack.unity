@@ -1017,7 +1017,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: fdfd352ea73fe5d43b99ba7b8e419b32, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::GridManager
-  blockResolveDelay: 0.4
 --- !u!1 &363282087
 GameObject:
   m_ObjectHideFlags: 0
@@ -1554,7 +1553,7 @@ MonoBehaviour:
   - {fileID: 11400000, guid: 510599eed819545418558bd339297f00, type: 2}
   - {fileID: 11400000, guid: 697477a92d7d52b489acb3415198e3c5, type: 2}
   - {fileID: 11400000, guid: 6a2ec580f0dc79e4d97a4e440c00974a, type: 2}
-  drawCountPerTurn: 6
+  drawCountPerTurn: 3
 --- !u!114 &613066519 stripped
 MonoBehaviour:
   m_CorrespondingSourceObject: {fileID: 7932111300528693554, guid: 5987f3262e5b58143ac9bc14cb74b275, type: 3}
@@ -2422,8 +2421,6 @@ MonoBehaviour:
   player: {fileID: 1414182076}
   enemy: {fileID: 1935796072}
   enemyBaseDamage: 8
-  resolutionDelay: 0.5
-  resolutionDisplayTime: 1
   enemyAttackDelay: 0.5
   postAttackDelay: 0.5
 --- !u!1 &1203761918
@@ -3464,6 +3461,22 @@ PrefabInstance:
     - target: {fileID: 6975457891198241078, guid: 5987f3262e5b58143ac9bc14cb74b275, type: 3}
       propertyPath: m_IsActive
       value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 7032609135084492761, guid: 5987f3262e5b58143ac9bc14cb74b275, type: 3}
+      propertyPath: title
+      value: "\uC0AC\uC6A9 \uC8FC\uBB38"
+      objectReference: {fileID: 0}
+    - target: {fileID: 7032609135084492761, guid: 5987f3262e5b58143ac9bc14cb74b275, type: 3}
+      propertyPath: attackLabel
+      value: "\uCD1D \uACF5\uACA9"
+      objectReference: {fileID: 0}
+    - target: {fileID: 7032609135084492761, guid: 5987f3262e5b58143ac9bc14cb74b275, type: 3}
+      propertyPath: defenseLabel
+      value: "\uCD1D \uBC29\uC5B4"
+      objectReference: {fileID: 0}
+    - target: {fileID: 7032609135084492761, guid: 5987f3262e5b58143ac9bc14cb74b275, type: 3}
+      propertyPath: emptyListText
+      value: "\uC0AC\uC6A9\uB41C \uC8FC\uBB38 \uC5C6\uC74C"
       objectReference: {fileID: 0}
     - target: {fileID: 7510608312129959724, guid: 5987f3262e5b58143ac9bc14cb74b275, type: 3}
       propertyPath: gridManager

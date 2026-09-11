@@ -22,7 +22,7 @@ public class DeckManager : MonoBehaviour
 
     [Header("드로우 설정")]
     [Tooltip("턴 시작 시 드로우할 카드 수")]
-    [SerializeField] private int drawCountPerTurn = 5;
+    [SerializeField] private int drawCountPerTurn = 3;
     
     // [추가] 다음 턴에 추가로 뽑을 카드 수
     private int bonusDrawForNextTurn = 0;
@@ -76,8 +76,11 @@ public class DeckManager : MonoBehaviour
         int drawCount = count > 0 ? count : (drawCountPerTurn + bonusDrawForNextTurn);
     
         // 합산 후 보너스 드로우 초기화
-        bonusDrawForNextTurn = 0; 
+        bonusDrawForNextTurn = 0;
 
+        Debug.Log($"[DeckManager] 드로우 요청: {drawCount}장");
+
+        int drawnCount = 0;
         for (int i = 0; i < drawCount; i++)
         {
             // 드로우 파일이 비었으면 무덤 → 드로우 파일로 셔플
@@ -95,9 +98,12 @@ public class DeckManager : MonoBehaviour
             CardData card = drawPile[^1];
             drawPile.RemoveAt(drawPile.Count - 1);
             hand.Add(card);
+            drawnCount++;
 
             GameEvents.RaiseCardDrawn(card);
         }
+
+        Debug.Log($"[DeckManager] 실제 드로우: {drawnCount}장 (손패 총 {hand.Count}장)");
     }
 
     /// <summary>

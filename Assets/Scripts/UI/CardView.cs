@@ -1,3 +1,4 @@
+using System.Collections;
 using TMPro;
 using Cyg.UI;
 using UnityEngine;
@@ -33,9 +34,18 @@ public class CardView : MonoBehaviour,
     [SerializeField, Min(0f)] private float blockPreviewTileGap = 2f;
     [SerializeField, Range(0f, 1f)] private float blockPreviewAlpha = 1f;
 
+    [Header("연출")]
+    [Tooltip("드로우될 때 오른쪽에서 슬라이드해 들어오는 시간")]
+    [SerializeField, Min(0f)] private float drawInDuration = 0.4f;
+    [Tooltip("드로우될 때 시작 위치를 목표 위치보다 오른쪽으로 얼마나 띄울지")]
+    [SerializeField] private float drawInOffsetX = 150f;
+
+    // 방어/드로우 색은 "대지의 방패"(Earth), "질풍의 지혜"(Wind) 아티팩트의
+    // 요구 색상(SymbolVisuals)과 동일하게 맞춘 값이다.
     private static readonly Color attackColor  = new(0.85f, 0.25f, 0.25f, 1f);
-    private static readonly Color defenseColor = new(0.25f, 0.45f, 0.85f, 1f);
-    private static readonly Color drawColor    = new(0.25f, 0.75f, 0.35f, 1f);
+    private static readonly Color defenseColor = new(0.40f, 0.65f, 0.20f, 1f); // Earth(녹색)
+    private static readonly Color drawColor    = new(0.55f, 0.90f, 0.85f, 1f); // Wind(하늘색)
+    private static readonly Color weakenColor  = new(0.85f, 0.60f, 0.15f, 1f);
 
     // ── Runtime ──
     [Header("Runtime Debug")]
@@ -44,6 +54,7 @@ public class CardView : MonoBehaviour,
 
     private Canvas rootCanvas;
     private CanvasGroup canvasGroup;
+    private RectTransform rectTransform;
     private CygHandHoverAnimator handHoverAnimator;
     private bool isPlacementPhase;
 
@@ -59,6 +70,7 @@ public class CardView : MonoBehaviour,
     {
         rootCanvas  = GetComponentInParent<Canvas>().rootCanvas;
         canvasGroup = GetComponent<CanvasGroup>();
+        rectTransform = (RectTransform)transform;
         handHoverAnimator = GetComponentInParent<CygHandHoverAnimator>();
 
         // 프리팹 인스턴스화를 위해 런타임에 동적으로 매니저와 뷰를 탐색
@@ -80,6 +92,38 @@ public class CardView : MonoBehaviour,
     private void HandleCombatStateChanged(CombatState state)
     {
         isPlacementPhase = state == CombatState.Placement;
+    }
+
+    // 손패에 새로 추가된 카드를 HandView가 생성 직후 호출한다.
+    // 오른쪽에서 슬라이드해 들어오는 연출을 재생한다.
+    public void PlayDrawInAnimation()
+    {
+        StartCoroutine(DrawInRoutine());
+    }
+
+    private IEnumerator DrawInRoutine()
+    {
+        // 한 프레임 대기해 CygHandHoverAnimator/레이아웃이 제자리를 잡게 한 뒤,
+        // 그 자리를 목표로 오른쪽에서 슬라이드해 들어오는 연출을 재생한다.
+        yield return null;
+
+        Vector2 targetPos = rectTransform.anchoredPosition;
+        Vector2 startPos = targetPos + new Vector2(drawInOffsetX, 0f);
+
+        handHoverAnimator?.SetExternallyAnimated(transform, true);
+        rectTransform.anchoredPosition = startPos;
+
+        float elapsed = 0f;
+        while (drawInDuration > 0f && elapsed < drawInDuration)
+        {
+            elapsed += Time.deltaTime;
+            float t = elapsed / drawInDuration;
+            rectTransform.anchoredPosition = Vector2.Lerp(startPos, targetPos, t);
+            yield return null;
+        }
+
+        rectTransform.anchoredPosition = targetPos;
+        handHoverAnimator?.SetExternallyAnimated(transform, false);
     }
 
     private void Start()
@@ -114,9 +158,10 @@ public class CardView : MonoBehaviour,
 
     private static Color GetTypeColor(CardType type) => type switch
     {
-        CardType.Attack  => attackColor,
-        CardType.DrawNow => drawColor,
-        _                => defenseColor,
+        CardType.Attack            => attackColor,
+        CardType.DrawNow           => drawColor,
+        CardType.WeakenEnemyAttack => weakenColor,
+        _                          => defenseColor,
     };
 
     // ═══════════════════════════════════════════
@@ -194,13 +239,7 @@ public class CardView : MonoBehaviour,
 
         if (placed)
         {
-            canvasGroup.alpha          = 1f;
-            canvasGroup.blocksRaycasts = true;
-
-            if (handHoverAnimator != null)
-                handHoverAnimator.MarkCardInactive(transform);
-            else
-                gameObject.SetActive(false);
+            Destroy(gameObject);
         }
         else
         {

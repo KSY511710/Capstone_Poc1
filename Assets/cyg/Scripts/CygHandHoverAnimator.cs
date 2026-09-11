@@ -43,6 +43,7 @@ namespace Cyg.UI
 
         private readonly List<CardVisual> cards = new();
         private readonly HashSet<Transform> inactiveCards = new();
+        private readonly HashSet<Transform> externallyAnimatedCards = new();
         private readonly Dictionary<Transform, CardStaticPose> cardStaticPoses = new();
         private readonly Dictionary<Transform, CardSortingState> cardSortingStates = new();
         private readonly Dictionary<Transform, bool> cardRaycastStates = new();
@@ -211,6 +212,16 @@ namespace Cyg.UI
             hoveredIndex = -1;
         }
 
+        // 카드가 직접 자기 위치/알파를 연출하는 동안(드로우 슬라이드인, 사용 후 페이드아웃 등)
+        // 이 애니메이터가 매 프레임 위치를 덮어쓰지 않도록 제외시킨다.
+        public void SetExternallyAnimated(Transform cardTransform, bool animated)
+        {
+            if (cardTransform == null) return;
+
+            if (animated) externallyAnimatedCards.Add(cardTransform);
+            else externallyAnimatedCards.Remove(cardTransform);
+        }
+
         public void MarkCardInactive(GameObject cardObject)
         {
             if (cardObject != null)
@@ -373,7 +384,8 @@ namespace Cyg.UI
             for (int i = 0; i < cards.Count; i++)
             {
                 RectTransform rectTransform = cards[i].RectTransform;
-                if (!IsHoverTargetAvailable(rectTransform) || IsMarkedInactive(rectTransform))
+                if (!IsHoverTargetAvailable(rectTransform) || IsMarkedInactive(rectTransform) ||
+                    externallyAnimatedCards.Contains(rectTransform))
                 {
                     continue;
                 }
@@ -422,6 +434,11 @@ namespace Cyg.UI
             {
                 CardVisual card = cards[i];
                 if (!IsHoverTargetAvailable(card.RectTransform))
+                {
+                    continue;
+                }
+
+                if (externallyAnimatedCards.Contains(card.RectTransform))
                 {
                     continue;
                 }
