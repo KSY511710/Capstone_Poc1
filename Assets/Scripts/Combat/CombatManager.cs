@@ -27,6 +27,8 @@ public class CombatManager : MonoBehaviour
 
     private int extraDrawNextTurn;
     private int enemyAttackReductionNextTurn;
+    private bool enemyDeadAfterResolution;
+    private bool resolutionComplete;
 
     // ═══════════════════════════════════════════
     //  Unity Lifecycle
@@ -35,6 +37,8 @@ public class CombatManager : MonoBehaviour
     private void OnEnable()
     {
         GameEvents.OnTurnEndRequested       += HandleTurnEndRequested;
+        GameEvents.OnResolutionResult       += HandleResolutionResult;
+        GameEvents.OnResolutionComplete     += HandleResolutionComplete;
         GameEvents.OnOverlapEffectTriggered += HandleOverlapEffectTriggered;
         GameEvents.OnCardEffectTriggered    += HandleCardEffectTriggered;
     }
@@ -42,6 +46,8 @@ public class CombatManager : MonoBehaviour
     private void OnDisable()
     {
         GameEvents.OnTurnEndRequested       -= HandleTurnEndRequested;
+        GameEvents.OnResolutionResult       -= HandleResolutionResult;
+        GameEvents.OnResolutionComplete     -= HandleResolutionComplete;
         GameEvents.OnOverlapEffectTriggered -= HandleOverlapEffectTriggered;
         GameEvents.OnCardEffectTriggered    -= HandleCardEffectTriggered;
     }
@@ -74,6 +80,7 @@ public class CombatManager : MonoBehaviour
         {
             case CombatState.PlayerDraw: EnterPlayerDraw(); break;
             case CombatState.Placement:  EnterPlacement();  break;
+            case CombatState.Resolution: EnterResolution(); break;
             case CombatState.EnemyTurn:  EnterEnemyTurn();  break;
             case CombatState.Win:
             case CombatState.Lose:       EnterCombatEnd(newState == CombatState.Win); break;
@@ -100,6 +107,11 @@ public class CombatManager : MonoBehaviour
         GameEvents.RaisePlacementPhaseStarted();
     }
 
+    private void EnterResolution()
+    {
+        StartCoroutine(ResolutionRoutine());
+    }
+
     private void EnterEnemyTurn()
     {
         StartCoroutine(EnemyTurnRoutine());
@@ -112,6 +124,20 @@ public class CombatManager : MonoBehaviour
     }
 
     // ─── Coroutines ───
+
+    private IEnumerator ResolutionRoutine()
+    {
+        resolutionComplete = false;
+        GameEvents.RaiseResolutionPhaseStarted();
+
+        // 블록들이 하나씩 결산 완료될 때까지 대기
+        yield return new WaitUntil(() => resolutionComplete);
+
+        if (enemyDeadAfterResolution)
+            TransitionTo(CombatState.Win);
+        else
+            TransitionTo(CombatState.EnemyTurn);
+    }
 
     private IEnumerator EnemyTurnRoutine()
     {
@@ -170,9 +196,21 @@ public class CombatManager : MonoBehaviour
             return;
         }
 
-        deckManager.DiscardHand();
+        TransitionTo(CombatState.Resolution);
+    }
 
-        if (enemy.IsDead) TransitionTo(CombatState.Win);
-        else TransitionTo(CombatState.EnemyTurn);
+    // 블록 하나씩 결산 결과 수신 — 이미 배치 즉시(즉발)로 수치가 반영됐으므로
+    // 여기서는 중복 적용하지 않는다. Resolution 단계 자체(연출/타이밍/UI 이벤트)는 유지.
+    private void HandleResolutionResult(ResolutionResult result)
+    {
+        if (currentState != CombatState.Resolution) return;
+    }
+
+    // 전체 결산 완료 — 손패 버리기 및 승패 기록
+    private void HandleResolutionComplete()
+    {
+        deckManager.DiscardHand();
+        enemyDeadAfterResolution = enemy.IsDead;
+        resolutionComplete = true;
     }
 }

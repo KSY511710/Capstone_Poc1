@@ -1,3 +1,4 @@
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -31,12 +32,14 @@ public class GridManager : MonoBehaviour
 
     private void OnEnable()
     {
-        GameEvents.OnDrawPhaseStarted += HandleDrawPhaseStarted;
+        GameEvents.OnDrawPhaseStarted       += HandleDrawPhaseStarted;
+        GameEvents.OnResolutionPhaseStarted += HandleResolutionPhaseStarted;
     }
 
     private void OnDisable()
     {
-        GameEvents.OnDrawPhaseStarted -= HandleDrawPhaseStarted;
+        GameEvents.OnDrawPhaseStarted       -= HandleDrawPhaseStarted;
+        GameEvents.OnResolutionPhaseStarted -= HandleResolutionPhaseStarted;
     }
 
     // ═══════════════════════════════════════════
@@ -125,6 +128,29 @@ public class GridManager : MonoBehaviour
     /// <summary> UI 미리보기용 — 현재 배치 기준 합산 결과 반환. 이벤트 발행 없음. </summary>
     public ResolutionResult GetPreview() => Calculate();
 
+    private void CalculateAndRaiseResolution()
+    {
+        StartCoroutine(BlockResolutionRoutine());
+    }
+
+    private IEnumerator BlockResolutionRoutine()
+    {
+        foreach (var pb in placedBlocks)
+        {
+            var result = new ResolutionResult();
+            foreach (var effect in pb.card.Effects)
+                EffectResolver.Apply(ref result, effect);
+
+            Debug.Log($"[GridManager] {pb.card.CardName} 결산 — 공격 {result.damage}, 방어 {result.defense}, 회복 {result.heal}, 드로우 +{result.draw}");
+            GameEvents.RaiseResolutionResult(result);
+        }
+
+        ClearGrid();
+        GameEvents.RaiseResolutionComplete();
+
+        yield break;
+    }
+
     private ResolutionResult Calculate()
     {
         var result = new ResolutionResult();
@@ -150,4 +176,5 @@ public class GridManager : MonoBehaviour
     // ─── Event Handlers ───
 
     private void HandleDrawPhaseStarted(int _) => ClearGrid();
+    private void HandleResolutionPhaseStarted() => CalculateAndRaiseResolution();
 }
