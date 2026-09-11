@@ -24,7 +24,7 @@ namespace Cyg.UI
         [SerializeField, Min(0f)] private float hoverLift = 55f;
         [SerializeField, Min(0f)] private float neighborPush = 42f;
         [SerializeField, Range(0f, 1f)] private float pushFalloff = 0.55f;
-        [SerializeField, Min(1f)] private float animationSpeed = 16f;
+        [SerializeField, Min(1f)] private float animationSpeed = 3f;
 
         [Header("Fan Layout")]
         [SerializeField] private bool useFanLayout = true;

@@ -40,6 +40,8 @@ public static class GameEvents
     public static event Action<CardData> OnCardDrawn;
     /// <summary> 카드가 핸드에서 제거(사용)되었을 때 </summary>
     public static event Action<CardData> OnCardUsed;
+    /// <summary> 손패 초과로 카드가 버려져 페널티 데미지가 발생했을 때 (데미지량) </summary>
+    public static event Action<int> OnHandOverflowDamage;
 
     // ─── 그리드 & 블록 배치 ───
     /// <summary> 블록이 그리드에 배치되었을 때 (카드 데이터, 그리드 좌표) </summary>
@@ -93,6 +95,7 @@ public static class GameEvents
 
     public static void RaiseCardDrawn(CardData card) => OnCardDrawn?.Invoke(card);
     public static void RaiseCardUsed(CardData card) => OnCardUsed?.Invoke(card);
+    public static void RaiseHandOverflowDamage(int damage) => OnHandOverflowDamage?.Invoke(damage);
 
     public static void RaiseBlockPlaced(CardData card, int x, int y) => OnBlockPlaced?.Invoke(card, x, y);
 
@@ -126,6 +129,7 @@ public static class GameEvents
         OnEnemyTurnStarted = null;
         OnCardDrawn = null;
         OnCardUsed = null;
+        OnHandOverflowDamage = null;
         OnBlockPlaced = null;
         OnResolutionResult = null;
         OnResolutionComplete = null;

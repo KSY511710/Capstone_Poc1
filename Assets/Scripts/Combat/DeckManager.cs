@@ -23,9 +23,16 @@ public class DeckManager : MonoBehaviour
     [Header("드로우 설정")]
     [Tooltip("턴 시작 시 드로우할 카드 수")]
     [SerializeField] private int drawCountPerTurn = 3;
-    
+
+    [Header("손패 제한")]
+    [Tooltip("손패 최대 장수. 이 장수를 넘겨 드로우된 카드는 손패에 들어오지 못하고 버려진다.")]
+    [SerializeField] private int maxHandSize = 10;
+
     // [추가] 다음 턴에 추가로 뽑을 카드 수
     private int bonusDrawForNextTurn = 0;
+
+    // 이번 턴에 손패 초과로 버려진 카드 수 (페널티 데미지 계산용, 턴 시작마다 초기화)
+    private int overflowDiscardCountThisTurn;
 
     // ── Runtime State ──
     private readonly List<CardData> drawPile = new();
@@ -41,16 +48,24 @@ public class DeckManager : MonoBehaviour
     private void OnEnable()
     {
         GameEvents.OnBlockPlaced += HandleBlockPlaced;
+        GameEvents.OnDrawPhaseStarted += HandleDrawPhaseStarted;
     }
 
     private void OnDisable()
     {
         GameEvents.OnBlockPlaced -= HandleBlockPlaced;
+        GameEvents.OnDrawPhaseStarted -= HandleDrawPhaseStarted;
     }
 
     private void HandleBlockPlaced(CardData card, int x, int y)
     {
         UseCard(card);
+    }
+
+    // 턴이 새로 시작되면 이번 턴의 손패 초과 카운트를 초기화한다.
+    private void HandleDrawPhaseStarted(int _)
+    {
+        overflowDiscardCountThisTurn = 0;
     }
 
     /// <summary>
@@ -97,6 +112,18 @@ public class DeckManager : MonoBehaviour
 
             CardData card = drawPile[^1];
             drawPile.RemoveAt(drawPile.Count - 1);
+
+            if (hand.Count >= maxHandSize)
+            {
+                // 손패 초과 — 카드는 손패에 들어오지 못하고 버려지며, 페널티 데미지가 발생한다.
+                // 페널티는 이번 턴에 몇 번째로 버려졌는지에 따라 1, 2, 3...으로 늘어난다.
+                discardPile.Add(card);
+                overflowDiscardCountThisTurn++;
+                Debug.Log($"[DeckManager] 손패 초과({maxHandSize}장)로 {card.CardName} 버려짐 — 페널티 데미지 {overflowDiscardCountThisTurn}");
+                GameEvents.RaiseHandOverflowDamage(overflowDiscardCountThisTurn);
+                continue;
+            }
+
             hand.Add(card);
             drawnCount++;
 

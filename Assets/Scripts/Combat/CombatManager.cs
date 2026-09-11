@@ -49,6 +49,7 @@ public class CombatManager : MonoBehaviour
         GameEvents.OnResolutionComplete     += HandleResolutionComplete;
         GameEvents.OnOverlapEffectTriggered += HandleOverlapEffectTriggered;
         GameEvents.OnCardEffectTriggered    += HandleCardEffectTriggered;
+        GameEvents.OnHandOverflowDamage     += HandleHandOverflowDamage;
     }
 
     private void OnDisable()
@@ -58,6 +59,7 @@ public class CombatManager : MonoBehaviour
         GameEvents.OnResolutionComplete     -= HandleResolutionComplete;
         GameEvents.OnOverlapEffectTriggered -= HandleOverlapEffectTriggered;
         GameEvents.OnCardEffectTriggered    -= HandleCardEffectTriggered;
+        GameEvents.OnHandOverflowDamage     -= HandleHandOverflowDamage;
     }
 
     // ═══════════════════════════════════════════
@@ -195,6 +197,14 @@ public class CombatManager : MonoBehaviour
         if (result.enemyAttackReduction > 0) enemyAttackReductionNextTurn += result.enemyAttackReduction;
 
         if (enemy.IsDead) TransitionTo(CombatState.Win);
+    }
+
+    // 손패 초과로 카드가 버려질 때마다 플레이어가 페널티 데미지를 받는다.
+    private void HandleHandOverflowDamage(int damage)
+    {
+        player.TakeDamage(damage);
+
+        if (player.IsDead) TransitionTo(CombatState.Lose);
     }
 
     private void HandleTurnEndRequested()
