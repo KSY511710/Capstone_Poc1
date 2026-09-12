@@ -46,9 +46,9 @@ public static class GameEvents
     public static event Action<CardData, int, int> OnBlockPlaced;  // cardData, gridX, gridY
 
     // ─── 결산 ───
-    /// <summary> 블록 하나의 결산 결과 발행 (블록마다 순서대로 호출됨) </summary>
+    /// <summary> 카드가 그리드에 배치되는 즉시 그 카드의 결산 결과 발행 </summary>
     public static event Action<ResolutionResult> OnResolutionResult;
-    /// <summary> 모든 블록 결산 완료 신호 — 손패 버리기·전이 타이밍용 </summary>
+    /// <summary> 턴 종료 시 그리드 정리 완료 신호 — 손패 버리기·다음 페이즈 전이 타이밍용 </summary>
     public static event Action OnResolutionComplete;
     /// <summary> 블록 겹침 시 즉시 발동하는 효과 발행 (아티팩트 발동 결과) </summary>
     public static event Action<ResolutionResult> OnOverlapEffectTriggered;

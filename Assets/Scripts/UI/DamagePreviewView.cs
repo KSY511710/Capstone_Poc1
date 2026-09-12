@@ -2,37 +2,46 @@ using TMPro;
 using UnityEngine;
 
 /// <summary>
-/// 배치 중 예상 데미지/방어도를 실시간으로 표시한다.
-/// 블록이 놓일 때마다 GridManager에서 계산값을 당겨와 갱신한다.
+/// 이번 턴 동안 배치 즉시 적용된 공격/방어 누적치를 실시간으로 표시한다.
+/// 카드 효과는 배치 즉시 발동하므로, 카드 결산(OnResolutionResult)과
+/// 아티팩트 발동(OnOverlapEffectTriggered) 결과를 매번 누적해서 보여준다.
 /// </summary>
 public class DamagePreviewView : MonoBehaviour
 {
-    [SerializeField] private GridManager gridManager;
     [SerializeField] private TextMeshProUGUI damageText;
     [SerializeField] private TextMeshProUGUI defenseText;
 
+    private int accumulatedDamage;
+    private int accumulatedDefense;
+
     private void OnEnable()
     {
-        GameEvents.OnBlockPlaced      += HandleBlockPlaced;
-        GameEvents.OnDrawPhaseStarted += HandleDrawPhaseStarted;
+        GameEvents.OnResolutionResult       += HandleResolution;
+        GameEvents.OnOverlapEffectTriggered += HandleResolution;
+        GameEvents.OnDrawPhaseStarted       += HandleDrawPhaseStarted;
     }
 
     private void OnDisable()
     {
-        GameEvents.OnBlockPlaced      -= HandleBlockPlaced;
-        GameEvents.OnDrawPhaseStarted -= HandleDrawPhaseStarted;
+        GameEvents.OnResolutionResult       -= HandleResolution;
+        GameEvents.OnOverlapEffectTriggered -= HandleResolution;
+        GameEvents.OnDrawPhaseStarted       -= HandleDrawPhaseStarted;
     }
 
-    private void HandleBlockPlaced(CardData _, int x, int y)
+    private void HandleResolution(ResolutionResult r)
     {
-        ResolutionResult r = gridManager.GetPreview();
+        accumulatedDamage  += r.damage;
+        accumulatedDefense += r.defense;
 
-        if (damageText != null)  damageText.text  = $"공격  {r.damage}";
-        if (defenseText != null) defenseText.text = $"방어  {r.defense}";
+        if (damageText != null)  damageText.text  = $"공격  {accumulatedDamage}";
+        if (defenseText != null) defenseText.text = $"방어  {accumulatedDefense}";
     }
 
     private void HandleDrawPhaseStarted(int _)
     {
+        accumulatedDamage = 0;
+        accumulatedDefense = 0;
+
         if (damageText != null)  damageText.text  = "공격  0";
         if (defenseText != null) defenseText.text = "방어  0";
     }

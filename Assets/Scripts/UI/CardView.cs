@@ -25,7 +25,6 @@ public class CardView : MonoBehaviour,
     [Header("UI 참조")]
     [SerializeField] private TextMeshProUGUI cardNameText;
     [SerializeField] private TextMeshProUGUI descriptionText;
-    [SerializeField] private Image cardImage;
     [SerializeField] private TextMeshProUGUI powerText;
     [SerializeField] private Image cardTypeIndicator;
     [SerializeField] private RectTransform blockPreviewRoot;

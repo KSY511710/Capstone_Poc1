@@ -16,6 +16,8 @@ using UnityEngine;
 /// </summary>
 public class DeckManager : MonoBehaviour
 {
+    public const int MaxHandSize = 10;
+
     [Header("초기 덱 구성")]
     [Tooltip("전투 시작 시 덱에 포함될 카드 목록 (중복 가능)")]
     [SerializeField] private List<CardData> starterDeck = new();
@@ -80,6 +82,13 @@ public class DeckManager : MonoBehaviour
 
         for (int i = 0; i < drawCount; i++)
         {
+            // 손패가 최대치에 도달하면 더 이상 드로우하지 않는다.
+            if (hand.Count >= MaxHandSize)
+            {
+                Debug.LogWarning($"[DeckManager] 손패가 최대치({MaxHandSize}장)에 도달하여 드로우 중단");
+                break;
+            }
+
             // 드로우 파일이 비었으면 무덤 → 드로우 파일로 셔플
             if (drawPile.Count == 0)
             {

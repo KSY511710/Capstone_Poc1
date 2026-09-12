@@ -17,7 +17,7 @@ public class CardData : ScriptableObject
     [SerializeField] private string description = "";
 
     [Header("효과 목록")]
-    [Tooltip("배치 효과 — 결산 시 적용된다.")]
+    [Tooltip("배치 효과 — 그리드에 배치되는 즉시 적용된다.")]
     [SerializeField] private List<CardEffect> effects = new();
 
     [HideInInspector]

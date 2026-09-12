@@ -36,12 +36,18 @@ namespace Cyg.UI
         [SerializeField] private bool keepCardsInsideSlotRoot = true;
         [SerializeField, Min(0f)] private float fitHorizontalPadding = 0f;
 
+        [Header("Base Spacing")]
+        [Tooltip("카드 중심 사이의 최대 간격. HorizontalLayoutGroup의 Child Force Expand로 인해 " +
+                 "카드 수가 적을 때 간격이 과도하게 벌어지는 것을 막는다.")]
+        [SerializeField, Min(0f)] private float maxCardSpacing = 60f;
+
         [Header("Hover Layer")]
         [SerializeField] private bool bringHoveredCardToFront = true;
         [SerializeField] private int hoveredSortingOrder = 5000;
         [SerializeField] private bool routeRaycastsToHoveredCard = true;
 
         private readonly List<CardVisual> cards = new();
+        private readonly List<RectTransform> activeCardBuffer = new();
         private readonly HashSet<Transform> inactiveCards = new();
         private readonly Dictionary<Transform, CardStaticPose> cardStaticPoses = new();
         private readonly Dictionary<Transform, CardSortingState> cardSortingStates = new();
@@ -175,16 +181,28 @@ namespace Cyg.UI
 
             PrepareHoverLayerComponents();
 
-            cards.Clear();
             cachedChildCount = slotRoot.childCount;
 
+            // 사용되어 비활성화된 카드는 완전히 제외한다 — 그래야 남은 카드들이
+            // 그 자리를 채우도록 다시 정렬된다.
+            activeCardBuffer.Clear();
             for (int i = 0; i < slotRoot.childCount; i++)
             {
                 RectTransform card = FindCardVisual(slotRoot.GetChild(i));
-                if (card == null)
+                if (card == null || !card.gameObject.activeInHierarchy)
                 {
                     continue;
                 }
+
+                activeCardBuffer.Add(card);
+            }
+
+            ClampCardSpacing(activeCardBuffer);
+
+            cards.Clear();
+            for (int i = 0; i < activeCardBuffer.Count; i++)
+            {
+                RectTransform card = activeCardBuffer[i];
 
                 if (!cardStaticPoses.TryGetValue(card, out CardStaticPose staticPose))
                 {
@@ -196,6 +214,49 @@ namespace Cyg.UI
             }
 
             PruneMissingSortingStates();
+        }
+
+        /// <summary>
+        /// HorizontalLayoutGroup(Child Force Expand)이 카드 수가 적을 때 남는 공간을
+        /// 카드 사이 간격으로 나눠 벌리는 것을 보정한다 — 인접 카드 중심 간 거리를
+        /// maxCardSpacing 이하로 압축하고, 압축된 그룹을 원래 중심 위치에 재배치한다.
+        /// </summary>
+        private void ClampCardSpacing(List<RectTransform> orderedCards)
+        {
+            int count = orderedCards.Count;
+            if (count < 2)
+            {
+                return;
+            }
+
+            var rawX = new float[count];
+            for (int i = 0; i < count; i++)
+                rawX[i] = GetPivotLocalX(orderedCards[i], orderedCards[i].anchoredPosition);
+
+            float originalCenter = 0f;
+            for (int i = 0; i < count; i++) originalCenter += rawX[i];
+            originalCenter /= count;
+
+            var clampedX = new float[count];
+            clampedX[0] = rawX[0];
+            for (int i = 1; i < count; i++)
+            {
+                float gap = Mathf.Clamp(rawX[i] - rawX[i - 1], -maxCardSpacing, maxCardSpacing);
+                clampedX[i] = clampedX[i - 1] + gap;
+            }
+
+            float clampedCenter = 0f;
+            for (int i = 0; i < count; i++) clampedCenter += clampedX[i];
+            clampedCenter /= count;
+            float recenterOffset = originalCenter - clampedCenter;
+
+            for (int i = 0; i < count; i++)
+            {
+                RectTransform rt = orderedCards[i];
+                Vector2 pos = rt.anchoredPosition;
+                pos.x = GetAnchoredXFromPivotLocal(rt, clampedX[i] + recenterOffset);
+                rt.anchoredPosition = pos;
+            }
         }
 
         private void CacheCanvasReferences()
@@ -232,13 +293,14 @@ namespace Cyg.UI
 
             if (cardTransform.TryGetComponent(out CanvasGroup canvasGroup))
             {
-                canvasGroup.alpha = 0.35f;
+                canvasGroup.alpha = 0f;
                 canvasGroup.blocksRaycasts = false;
                 canvasGroup.interactable = false;
             }
 
-            cardTransform.gameObject.SetActive(true);
+            cardTransform.gameObject.SetActive(false);
             ClearHover();
+            RequestRefreshCards();
         }
 
         public void RestoreCardActive(GameObject cardObject)

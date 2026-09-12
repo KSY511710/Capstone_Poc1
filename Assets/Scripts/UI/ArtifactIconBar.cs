@@ -9,8 +9,9 @@ using UnityEngine.UI;
 /// 아이콘 바로 아래에 아티팩트 이름/설명/요구 조건을 보여주는 툴팁이 뜬다.
 ///
 /// <para>
-/// <b>씬 설정:</b> 빈 UI GameObject에 이 컴포넌트를 붙이고 RectTransform을
-/// 화면 오른쪽 위로 앵커(anchorMin/Max = (1,1))하면 된다. 아이콘 슬롯과 툴팁은
+/// <b>씬 설정:</b> 빈 UI GameObject에 이 컴포넌트를 붙이고, 그 GameObject를
+/// 원하는 화면 위치로 옮기면 된다 — 아이콘 바는 항상 이 GameObject의 위치를
+/// 중심으로 나타난다(좌표를 따로 입력할 필요 없음). 아이콘 슬롯과 툴팁은
 /// 전부 런타임에 자동 생성된다.
 /// </para>
 /// </summary>
@@ -170,14 +171,17 @@ public class ArtifactIconBar : MonoBehaviour
         go.transform.SetParent(transform, false);
 
         slotContainer = go.GetComponent<RectTransform>();
-        slotContainer.anchorMin = new Vector2(1f, 1f);
-        slotContainer.anchorMax = new Vector2(1f, 1f);
-        slotContainer.pivot = new Vector2(1f, 1f);
+
+        // 부모(이 컴포넌트가 붙은 GameObject)의 위치를 그대로 중심점으로 사용한다.
+        // 좌표를 따로 입력하지 않아도, 부모를 옮기면 아이콘 바도 같이 옮겨진다.
+        slotContainer.anchorMin = new Vector2(0.5f, 0.5f);
+        slotContainer.anchorMax = new Vector2(0.5f, 0.5f);
+        slotContainer.pivot = new Vector2(0.5f, 0.5f);
         slotContainer.anchoredPosition = Vector2.zero;
 
         var layout = go.GetComponent<HorizontalLayoutGroup>();
         layout.spacing = iconSpacing;
-        layout.childAlignment = TextAnchor.UpperRight;
+        layout.childAlignment = TextAnchor.MiddleCenter;
         layout.childControlWidth = false;
         layout.childControlHeight = false;
         layout.childForceExpandWidth = false;
@@ -205,12 +209,12 @@ public class ArtifactIconBar : MonoBehaviour
         go.transform.SetParent(transform, false);
 
         tooltip = go.GetComponent<RectTransform>();
-        tooltip.anchorMin = new Vector2(1f, 1f);
-        tooltip.anchorMax = new Vector2(1f, 1f);
-        tooltip.pivot = new Vector2(1f, 1f);
+        tooltip.anchorMin = new Vector2(0.5f, 0.5f);
+        tooltip.anchorMax = new Vector2(0.5f, 0.5f);
+        tooltip.pivot = new Vector2(0.5f, 1f);
         tooltip.sizeDelta = new Vector2(tooltipWidth, tooltipHeight);
-        // 아이콘 한 줄 바로 아래에 고정 표시
-        tooltip.anchoredPosition = new Vector2(0f, -(iconSize + iconSpacing));
+        // 아이콘 한 줄(부모 위치 중심, 높이 iconSize) 바로 아래에 표시
+        tooltip.anchoredPosition = new Vector2(0f, -(iconSize * 0.5f) - iconSpacing);
 
         var bg = go.GetComponent<Image>();
         bg.color = new Color(0f, 0f, 0f, 0.85f);

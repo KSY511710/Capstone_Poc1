@@ -31,7 +31,6 @@ public class CombatManager : MonoBehaviour
 
     private int extraDrawNextTurn;
     private int enemyAttackReductionNextTurn;
-    private bool enemyDeadAfterResolution;
     private bool resolutionComplete;
 
     // ═══════════════════════════════════════════
@@ -139,10 +138,7 @@ public class CombatManager : MonoBehaviour
 
         yield return new WaitForSeconds(resolutionDisplayTime);
 
-        if (enemyDeadAfterResolution)
-            TransitionTo(CombatState.Win);
-        else
-            TransitionTo(CombatState.EnemyTurn);
+        TransitionTo(enemy.IsDead ? CombatState.Win : CombatState.EnemyTurn);
     }
 
     private IEnumerator EnemyTurnRoutine()
@@ -168,7 +164,12 @@ public class CombatManager : MonoBehaviour
 
     // ─── Event Handlers ───
 
-    private void HandleOverlapEffectTriggered(ResolutionResult result)
+    // 카드 배치 즉시(OnResolutionResult) / 아티팩트 발동(OnOverlapEffectTriggered) 양쪽 모두
+    // 동일한 방식으로 수치를 반영한다.
+    private void HandleResolutionResult(ResolutionResult result) => ApplyResolution(result);
+    private void HandleOverlapEffectTriggered(ResolutionResult result) => ApplyResolution(result);
+
+    private void ApplyResolution(ResolutionResult result)
     {
         if (result.damage > 0)  enemy.TakeDamage(result.damage);
         if (result.defense > 0) player.AddDefense(result.defense);
@@ -191,23 +192,10 @@ public class CombatManager : MonoBehaviour
         TransitionTo(CombatState.Resolution);
     }
 
-    // 블록 하나씩 결산 결과 수신 — 수치만 반영
-    private void HandleResolutionResult(ResolutionResult result)
-    {
-        if (currentState != CombatState.Resolution) return;
-
-        if (result.damage > 0)  enemy.TakeDamage(result.damage);
-        if (result.defense > 0) player.AddDefense(result.defense);
-        if (result.heal > 0)    player.Heal(result.heal);
-        if (result.draw > 0)    extraDrawNextTurn += result.draw;
-        if (result.enemyAttackReduction > 0) enemyAttackReductionNextTurn += result.enemyAttackReduction;
-    }
-
-    // 전체 결산 완료 — 손패 버리기 및 승패 기록
+    // 그리드 정리 완료 — 손패 버리기
     private void HandleResolutionComplete()
     {
         deckManager.DiscardHand();
-        enemyDeadAfterResolution = enemy.IsDead;
         resolutionComplete = true;
     }
 }

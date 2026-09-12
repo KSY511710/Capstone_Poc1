@@ -1,4 +1,3 @@
-using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -7,20 +6,9 @@ public class GridManager : MonoBehaviour
     public const int GridSize = 3;
     public const int MaxOverlapPerCell = 3;
 
-    [Header("연출")]
-    [Tooltip("블록 하나 결산 후 다음 블록까지 대기 시간")]
-    [SerializeField] private float blockResolveDelay = 0.4f;
-
     // ── Grid State ──
     private readonly SymbolType[,] grid = new SymbolType[GridSize, GridSize];
     private readonly int[,] overlapCount = new int[GridSize, GridSize];
-    private readonly List<PlacedBlock> placedBlocks = new();
-
-    private struct PlacedBlock
-    {
-        public CardData card;
-        public int originX, originY;
-    }
 
     // ── Public Read-Only ──
 
@@ -62,11 +50,10 @@ public class GridManager : MonoBehaviour
             if (gx < 0 || gx >= GridSize || gy < 0 || gy >= GridSize)
                 return false;
 
-            if (grid[gx, gy] != SymbolType.None)
-            {
-                if (grid[gx, gy] != symbol) return false;
-                if (overlapCount[gx, gy] >= MaxOverlapPerCell) return false;
-            }
+            // 같은 색이 3번 겹치면 그 칸은 즉시 비워지므로(TryPlaceBlock 참고),
+            // 배치 시점에 overlapCount가 MaxOverlapPerCell 이상으로 남아있는 경우는 없다.
+            if (grid[gx, gy] != SymbolType.None && grid[gx, gy] != symbol)
+                return false;
         }
 
         return true;
@@ -92,21 +79,43 @@ public class GridManager : MonoBehaviour
             overlapByColor[symbol] = count + 1;
         }
 
-        // 2. 그리드 업데이트
+        // 2. 그리드 업데이트 — 같은 색이 3번째로 겹친 칸은 즉시 비워진다(팝).
+        var poppedColors = new List<SymbolType>();
         foreach (var (col, row, symbol) in cells)
         {
             int gx = originX + col;
             int gy = originY + row;
             grid[gx, gy] = symbol;
             overlapCount[gx, gy]++;
+
+            if (overlapCount[gx, gy] >= MaxOverlapPerCell)
+            {
+                grid[gx, gy] = SymbolType.None;
+                overlapCount[gx, gy] = 0;
+                poppedColors.Add(symbol);
+            }
         }
 
-        placedBlocks.Add(new PlacedBlock { card = card, originX = originX, originY = originY });
         GameEvents.RaiseBlockPlaced(card, originX, originY);
 
-        // 3. 색상별 겹침 카운트를 아티팩트 시스템(ArtifactManager)에 전달
+        // 3. 카드 효과를 배치 즉시 결산하여 발행
+        var result = new ResolutionResult();
+        foreach (var effect in card.Effects)
+            EffectResolver.Apply(ref result, effect);
+
+        Debug.Log($"[GridManager] {card.CardName} 배치 즉시 결산 — 공격 {result.damage}, 방어 {result.defense}, 회복 {result.heal}, 드로우 +{result.draw}");
+        GameEvents.RaiseResolutionResult(result);
+
+        // 4. 색상별 겹침 카운트를 아티팩트 시스템(ArtifactManager)에 전달
         foreach (var kvp in overlapByColor)
             GameEvents.RaiseGridColorOverlapped(kvp.Key, kvp.Value);
+
+        // 5. 3겹으로 팝된 칸은 해당 색 아티팩트 진행도에 추가 보너스 +1
+        foreach (var color in poppedColors)
+        {
+            Debug.Log($"[GridManager] {color} 칸 3겹 팝 — 아티팩트 진행도 +1 보너스");
+            GameEvents.RaiseGridColorOverlapped(color, 1);
+        }
 
         Debug.Log($"[GridManager] {card.CardName} 배치 완료 ({originX}, {originY})");
         return true;
@@ -115,41 +124,6 @@ public class GridManager : MonoBehaviour
     // ═══════════════════════════════════════════
     //  Private
     // ═══════════════════════════════════════════
-
-    /// <summary> UI 미리보기용 — 현재 배치 기준 합산 결과 반환. 이벤트 발행 없음. </summary>
-    public ResolutionResult GetPreview() => Calculate();
-
-    private void CalculateAndRaiseResolution()
-    {
-        StartCoroutine(BlockResolutionRoutine());
-    }
-
-    private IEnumerator BlockResolutionRoutine()
-    {
-        foreach (var pb in placedBlocks)
-        {
-            var result = new ResolutionResult();
-            foreach (var effect in pb.card.Effects)
-                EffectResolver.Apply(ref result, effect);
-
-            Debug.Log($"[GridManager] {pb.card.CardName} 결산 — 공격 {result.damage}, 방어 {result.defense}, 회복 {result.heal}, 드로우 +{result.draw}");
-            GameEvents.RaiseResolutionResult(result);
-
-            yield return new WaitForSeconds(blockResolveDelay);
-        }
-
-        ClearGrid();
-        GameEvents.RaiseResolutionComplete();
-    }
-
-    private ResolutionResult Calculate()
-    {
-        var result = new ResolutionResult();
-        foreach (var pb in placedBlocks)
-            foreach (var effect in pb.card.Effects)
-                EffectResolver.Apply(ref result, effect);
-        return result;
-    }
 
     private void ClearGrid()
     {
@@ -160,12 +134,17 @@ public class GridManager : MonoBehaviour
             overlapCount[x, y] = 0;
         }
 
-        placedBlocks.Clear();
         Debug.Log("[GridManager] 그리드 초기화");
     }
 
     // ─── Event Handlers ───
 
     private void HandleDrawPhaseStarted(int _) => ClearGrid();
-    private void HandleResolutionPhaseStarted() => CalculateAndRaiseResolution();
+
+    // 카드 효과는 배치 시점에 이미 적용되었으므로, 턴 종료 시에는 그리드 정리만 하면 된다.
+    private void HandleResolutionPhaseStarted()
+    {
+        ClearGrid();
+        GameEvents.RaiseResolutionComplete();
+    }
 }

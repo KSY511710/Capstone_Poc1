@@ -17,7 +17,6 @@ namespace Cyg.UI
         [SerializeField] private CombatUnit playerUnit;
         [SerializeField] private CombatUnit enemyUnit;
         [SerializeField] private CombatManager combatManager;
-        [SerializeField] private GridManager gridManager;
         [SerializeField] private bool findUnitsOnEnable = true;
 
         [Header("Text")]
@@ -36,18 +35,15 @@ namespace Cyg.UI
         [SerializeField] private string missingValueText = "--";
 
         private int accumulatedDamage = 0;
-        private bool isResolving = false;
 
         private void OnEnable()
         {
             GameEvents.OnPlayerHpChanged  += HandlePlayerHpChanged;
             GameEvents.OnEnemyHpChanged   += HandleEnemyHpChanged;
             GameEvents.OnPlayerDefenseChanged += HandlePlayerDefenseChanged;
-            //GameEvents.OnBlockPlaced            += HandleBlockPlaced;
             GameEvents.OnDrawPhaseStarted       += HandleDrawPhaseStarted;
-            GameEvents.OnResolutionPhaseStarted += HandleResolutionPhaseStarted;
             GameEvents.OnResolutionResult       += HandleResolutionResult;
-            GameEvents.OnResolutionComplete     += HandleResolutionComplete;
+            GameEvents.OnOverlapEffectTriggered += HandleResolutionResult;
 
             if (findUnitsOnEnable)
                 RefreshUnitReferences();
@@ -60,11 +56,9 @@ namespace Cyg.UI
             GameEvents.OnPlayerHpChanged  -= HandlePlayerHpChanged;
             GameEvents.OnEnemyHpChanged   -= HandleEnemyHpChanged;
             GameEvents.OnPlayerDefenseChanged -= HandlePlayerDefenseChanged;
-            GameEvents.OnBlockPlaced            -= HandleBlockPlaced;
             GameEvents.OnDrawPhaseStarted       -= HandleDrawPhaseStarted;
-            GameEvents.OnResolutionPhaseStarted -= HandleResolutionPhaseStarted;
             GameEvents.OnResolutionResult       -= HandleResolutionResult;
-            GameEvents.OnResolutionComplete     -= HandleResolutionComplete;
+            GameEvents.OnOverlapEffectTriggered -= HandleResolutionResult;
         }
 
         public void RefreshUnitReferences()
@@ -78,8 +72,6 @@ namespace Cyg.UI
 
             if (combatManager == null)
                 combatManager = FindAnyObjectByType<CombatManager>();
-            if (gridManager == null)
-                gridManager = FindAnyObjectByType<GridManager>();
         }
 
         public void RefreshSnapshot()
@@ -109,10 +101,7 @@ namespace Cyg.UI
 
         private void RefreshAttackTexts()
         {
-            int playerAtk = isResolving
-                ? accumulatedDamage
-                : (gridManager != null ? gridManager.GetPreview().damage : 0);
-            SetText(playerAttackText, playerAtk.ToString());
+            SetText(playerAttackText, accumulatedDamage.ToString());
 
             string enemyAtk = combatManager != null
                 ? combatManager.EnemyBaseDamage.ToString()
@@ -120,21 +109,9 @@ namespace Cyg.UI
             SetText(enemyAttackText, enemyAtk);
         }
 
-        private void HandleBlockPlaced(CardData _, int __, int ___)
-        {
-            RefreshAttackTexts();
-        }
-
+        // 카드 효과는 배치 즉시 발동하므로, 이번 턴 동안 실제로 적용된 데미지를 누적해서 보여준다.
         private void HandleDrawPhaseStarted(int _)
         {
-            isResolving = false;
-            accumulatedDamage = 0;
-            RefreshAttackTexts();
-        }
-
-        private void HandleResolutionPhaseStarted()
-        {
-            isResolving = true;
             accumulatedDamage = 0;
             RefreshAttackTexts();
         }
@@ -143,11 +120,6 @@ namespace Cyg.UI
         {
             accumulatedDamage += result.damage;
             SetText(playerAttackText, accumulatedDamage.ToString());
-        }
-
-        private void HandleResolutionComplete()
-        {
-            isResolving = false;
         }
 
         private void HandlePlayerHpChanged(int current, int max)

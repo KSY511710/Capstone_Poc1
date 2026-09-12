@@ -13,12 +13,10 @@ MonoBehaviour:
   m_Name: "\uBB3C\uCD1D"
   m_EditorClassIdentifier: Assembly-CSharp::CardData
   cardName: "\uBB3C\uCD1D"
-  description: "\uD134 \uC885\uB8CC \uC2DC \uD53C\uD574\uB97C {0} \uC90D\uB2C8\uB2E4."
+  description: "\uD53C\uD574\uB97C {0} \uC90D\uB2C8\uB2E4."
   effects:
   - effectType: 0
     power: 2
-  overlapEffects: []
-  overlapDescription: 
   width: 2
   height: 1
   symbols: 0200000004000000
