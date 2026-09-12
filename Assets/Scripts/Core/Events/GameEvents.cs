@@ -52,7 +52,10 @@ public static class GameEvents
     public static event Action OnResolutionComplete;
     /// <summary> 블록 겹침 시 즉시 발동하는 효과 발행 (아티팩트 발동 결과) </summary>
     public static event Action<ResolutionResult> OnOverlapEffectTriggered;
-    /// <summary> 그리드 배치 중 특정 색상이 겹쳤을 때 발행 (겹친 색, 겹친 칸 수) — 아티팩트 진행도 누적용 </summary>
+    /// <summary>
+    /// 블록 배치 시 색상별 카운트 발행 (색상, 카운트) — 아티팩트 진행도 누적용.
+    /// 블록이 가진 색상 칸마다 기본 1, 기존 칸과 겹치는 칸이면 추가로 1이 더해진다.
+    /// </summary>
     public static event Action<SymbolType, int> OnGridColorOverlapped;
     /// <summary> 아티팩트의 색상별 진행도가 바뀌었을 때 발행 (아티팩트, 색상, 현재 카운트, 요구 카운트) — UI 표시용 </summary>
     public static event Action<ArtifactData, SymbolType, int, int> OnArtifactProgressChanged;

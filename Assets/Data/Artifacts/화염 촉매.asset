@@ -15,9 +15,12 @@ MonoBehaviour:
   artifactName: "\uD654\uC5FC \uCD09\uB9E4"
   description: "\uC801\uC5D0\uAC8C 6\uC758 \uD53C\uD574\uB97C \uC90D\uB2C8\uB2E4."
   icon: {fileID: 0}
+  iconColor: {r: 0.5849056, g: 0, b: 0, a: 1}
   requirements:
   - color: 1
     requiredCount: 3
+  - color: 3
+    requiredCount: 1
   effects:
   - effectType: 0
     power: 6

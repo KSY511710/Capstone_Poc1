@@ -66,17 +66,22 @@ public class GridManager : MonoBehaviour
 
         var cells = card.GetOccupiedCells(rotationSteps);
 
-        // 1. 겹치는 칸을 색상별로 집계한다.
+        // 1. 색상별 카운트를 집계한다 — 블록이 가진 색은 칸마다 기본 +1,
+        //    기존 칸과 겹치는 칸이면 추가로 +1씩 더 붙는다.
         //    CanPlaceBlock 검증상 겹친 칸의 기존 심볼은 항상 새 카드의 심볼과 같다.
-        var overlapByColor = new Dictionary<SymbolType, int>();
+        var colorCounts = new Dictionary<SymbolType, int>();
         foreach (var (col, row, symbol) in cells)
         {
             int gx = originX + col;
             int gy = originY + row;
-            if (grid[gx, gy] == SymbolType.None) continue;
 
-            overlapByColor.TryGetValue(symbol, out int count);
-            overlapByColor[symbol] = count + 1;
+            colorCounts.TryGetValue(symbol, out int count);
+            count += 1; // 블록이 가진 색상 기본 카운트
+
+            if (grid[gx, gy] != SymbolType.None)
+                count += 1; // 기존 칸과 겹치면 추가 카운트
+
+            colorCounts[symbol] = count;
         }
 
         // 2. 그리드 업데이트 — 같은 색이 3번째로 겹친 칸은 즉시 비워진다(팝).
@@ -106,8 +111,8 @@ public class GridManager : MonoBehaviour
         Debug.Log($"[GridManager] {card.CardName} 배치 즉시 결산 — 공격 {result.damage}, 방어 {result.defense}, 회복 {result.heal}, 드로우 +{result.draw}");
         GameEvents.RaiseResolutionResult(result);
 
-        // 4. 색상별 겹침 카운트를 아티팩트 시스템(ArtifactManager)에 전달
-        foreach (var kvp in overlapByColor)
+        // 4. 색상별 카운트를 아티팩트 시스템(ArtifactManager)에 전달
+        foreach (var kvp in colorCounts)
             GameEvents.RaiseGridColorOverlapped(kvp.Key, kvp.Value);
 
         // 5. 3겹으로 팝된 칸은 해당 색 아티팩트 진행도에 추가 보너스 +1

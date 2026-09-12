@@ -16,8 +16,11 @@ public class ArtifactData : ScriptableObject
     [TextArea(2, 4)]
     [SerializeField] private string description = "";
 
-    [Tooltip("아이콘 (UI 표시용). 비워두면 요구 색상으로 칠해진 사각형이 대신 표시된다.")]
+    [Tooltip("아이콘 (UI 표시용). 비워두면 iconColor로 칠해진 사각형이 대신 표시된다.")]
     [SerializeField] private Sprite icon;
+
+    [Tooltip("아이콘 배경/틴트 색상. 요구 색상과 무관하게 직접 지정한다.")]
+    [SerializeField] private Color iconColor = Color.white;
 
     [Header("발동 조건")]
     [Tooltip("발동에 필요한 색상별 요구 카운트. 모두 충족해야 발동한다.")]
@@ -31,6 +34,7 @@ public class ArtifactData : ScriptableObject
     public string ArtifactName => artifactName;
     public string Description => description;
     public Sprite Icon => icon;
+    public Color IconColor => iconColor;
     public IReadOnlyList<ArtifactRequirement> Requirements => requirements;
     public IReadOnlyList<CardEffect> Effects => effects;
 }

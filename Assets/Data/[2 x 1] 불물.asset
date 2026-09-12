@@ -14,11 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::CardData
   cardName: "[2 x 1] \uBD88\uBB3C"
   description: "{0}\uB380 {1}\uBC29\uC5B4\uB3C4"
-  effects:
-  - effectType: 0
-    power: 5
-  - effectType: 1
-    power: 5
+  effects: []
   overlapEffects: []
   overlapDescription: 
   width: 2

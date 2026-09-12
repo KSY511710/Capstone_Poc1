@@ -15,11 +15,7 @@ MonoBehaviour:
   cardName: "[2 x 1] \uBB3C"
   description: "\uC801\uC5D0\uAC8C {0}\uC758 \uD53C\uD574\uB97C \uC785\uD799\uB2C8\uB2E4\n{1}\uC758
     \uBC29\uC5B4\uB3C4\uB97C \uC5BB\uC2B5\uB2C8\uB2E4."
-  effects:
-  - effectType: 0
-    power: 5
-  - effectType: 1
-    power: 5
+  effects: []
   overlapEffects: []
   overlapDescription: 
   width: 1

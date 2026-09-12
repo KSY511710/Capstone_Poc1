@@ -95,11 +95,7 @@ public class ArtifactIconBar : MonoBehaviour
         foreach (var slot in slots)
         {
             if (slot.Artifact != artifact) continue;
-
-            // 아이콘 1개당 요구 색상 1개를 대표로 표시한다 (현재 아티팩트는 전부 단일 색상 요구).
-            bool isPrimaryColor = artifact.Requirements.Count > 0 && artifact.Requirements[0].color == color;
-            if (isPrimaryColor)
-                slot.SetCount(current, required);
+            slot.SetCount(color, current, required);
         }
     }
 
@@ -128,9 +124,7 @@ public class ArtifactIconBar : MonoBehaviour
 
         var image = go.GetComponent<Image>();
         image.sprite = artifact.Icon;
-        image.color = artifact.Requirements.Count > 0
-            ? SymbolVisuals.GetColor(artifact.Requirements[0].color)
-            : Color.gray;
+        image.color = artifact.IconColor;
         image.raycastTarget = true;
 
         var countGo = new GameObject("CountText", typeof(RectTransform), typeof(TextMeshProUGUI));

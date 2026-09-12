@@ -14,9 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::CardData
   cardName: "\uCD08\uAE09 \uBC29\uC5B4"
   description: "\uBC29\uC5B4\uB3C4\uB97C {0} \uC5BB\uC2B5\uB2C8\uB2E4."
-  effects:
-  - effectType: 1
-    power: 2
+  effects: []
   width: 1
   height: 2
   symbols: 0300000003000000
