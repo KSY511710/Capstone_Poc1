@@ -16,7 +16,6 @@ public class GridCellView : MonoBehaviour
     [SerializeField, Min(1f)] private float outlineThickness = 4f;
 
     private static readonly Color colorEmpty = new(0.15f, 0.15f, 0.15f, 0.6f);
-    private static readonly Color colorOccupied = new(0.30f, 0.30f, 0.60f, 0.8f);
     private static readonly Color colorValid = new(0.10f, 0.95f, 0.35f, 1f);
     private static readonly Color colorInvalid = new(1.00f, 0.20f, 0.15f, 1f);
     private static readonly Color colorOverlap = new(1.00f, 0.80f, 0.10f, 1f);
@@ -37,29 +36,17 @@ public class GridCellView : MonoBehaviour
         EnsureReferences();
         GridX = x;
         GridY = y;
-        SetState(CellHighlight.Empty);
+        ResetToEmpty();
 
         if (symbolLabel != null) symbolLabel.text = "";
         if (overlapLabel != null) overlapLabel.text = "";
     }
 
-    public void SetState(CellHighlight highlight)
+    private void ResetToEmpty()
     {
         EnsureReferences();
         ClearOutline();
-
-        background.color = highlight switch
-        {
-            CellHighlight.Valid => colorEmpty,
-            CellHighlight.Invalid => colorEmpty,
-            CellHighlight.Occupied => colorOccupied,
-            _ => colorEmpty,
-        };
-
-        if (highlight == CellHighlight.Valid)
-            ApplyOutline(colorValid);
-        else if (highlight == CellHighlight.Invalid)
-            ApplyOutline(colorInvalid);
+        background.color = colorEmpty;
     }
 
     public void SetPreview(SymbolType previewSymbol, bool canPlace, int currentOverlapCount)
@@ -100,7 +87,7 @@ public class GridCellView : MonoBehaviour
 
         if (symbol == SymbolType.None)
         {
-            SetState(CellHighlight.Empty);
+            ResetToEmpty();
             if (symbolLabel != null) symbolLabel.text = "";
             if (overlapLabel != null) overlapLabel.text = "";
             return;
@@ -208,5 +195,3 @@ public class GridCellView : MonoBehaviour
         return image;
     }
 }
-
-public enum CellHighlight { Empty, Occupied, Valid, Invalid }

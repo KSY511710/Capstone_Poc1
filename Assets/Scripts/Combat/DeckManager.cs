@@ -3,31 +3,27 @@ using UnityEngine;
 
 /// <summary>
 /// 덱 관리 시스템 — 셔플, 드로우, 핸드, 무덤(Discard) 관리.
-/// 
+///
 /// <para>
-/// <b>라이프사이클:</b>
+/// <b>라이프사이클:</b> 손패는 턴을 넘어 유지된다.
 /// <list type="number">
 ///   <item>Initialize()로 초기 덱 구성</item>
-///   <item>DrawCards()로 드로우 → 핸드에 추가</item>
-///   <item>DiscardCard()로 사용/버린 카드를 무덤으로</item>
+///   <item>매 턴 시작 시 손패가 TargetHandSize보다 적으면 그만큼만 DrawCards()로 보충</item>
+///   <item>UseCard()로 배치 즉시 사용한 카드를 무덤으로</item>
+///   <item>턴 종료 시 손패가 TargetHandSize를 초과하면 DiscardCards()로 초과분 확정 버리기</item>
 ///   <item>드로우 파일이 비면 무덤을 자동 셔플하여 덱에 복귀</item>
 /// </list>
 /// </para>
 /// </summary>
 public class DeckManager : MonoBehaviour
 {
-    public const int MaxHandSize = 10;
-
     [Header("초기 덱 구성")]
     [Tooltip("전투 시작 시 덱에 포함될 카드 목록 (중복 가능)")]
     [SerializeField] private List<CardData> starterDeck = new();
 
     [Header("드로우 설정")]
-    [Tooltip("턴 시작 시 드로우할 카드 수")]
-    [SerializeField] private int drawCountPerTurn = 5;
-    
-    // [추가] 다음 턴에 추가로 뽑을 카드 수
-    private int bonusDrawForNextTurn = 0;
+    [Tooltip("턴 시작 시 손패를 이 장수까지 채운다 (이미 이만큼 있으면 드로우하지 않음)")]
+    [SerializeField] private int targetHandSize = 7;
 
     // ── Runtime State ──
     private readonly List<CardData> drawPile = new();
@@ -38,7 +34,7 @@ public class DeckManager : MonoBehaviour
     public IReadOnlyList<CardData> Hand => hand;
     public int DrawPileCount => drawPile.Count;
     public int DiscardPileCount => discardPile.Count;
-    public int DrawCountPerTurn => drawCountPerTurn;
+    public int TargetHandSize => targetHandSize;
 
     private void OnEnable()
     {
@@ -72,23 +68,10 @@ public class DeckManager : MonoBehaviour
     /// 지정된 수만큼 카드를 드로우하여 핸드에 추가한다.
     /// 드로우 파일이 부족하면 무덤을 셔플하여 보충한다.
     /// </summary>
-    public void DrawCards(int count = -1)
+    public void DrawCards(int count)
     {
-        // 기본 드로우 수에 보너스 드로우를 합산 (count가 지정되지 않았을 때만)
-        int drawCount = count > 0 ? count : (drawCountPerTurn + bonusDrawForNextTurn);
-    
-        // 합산 후 보너스 드로우 초기화
-        bonusDrawForNextTurn = 0; 
-
-        for (int i = 0; i < drawCount; i++)
+        for (int i = 0; i < count; i++)
         {
-            // 손패가 최대치에 도달하면 더 이상 드로우하지 않는다.
-            if (hand.Count >= MaxHandSize)
-            {
-                Debug.LogWarning($"[DeckManager] 손패가 최대치({MaxHandSize}장)에 도달하여 드로우 중단");
-                break;
-            }
-
             // 드로우 파일이 비었으면 무덤 → 드로우 파일로 셔플
             if (drawPile.Count == 0)
             {
@@ -126,12 +109,16 @@ public class DeckManager : MonoBehaviour
     }
 
     /// <summary>
-    /// 핸드에 남은 카드를 전부 무덤으로 보낸다. 턴 종료 시 호출.
+    /// 지정된 카드들을 손패에서 제거하고 무덤으로 보낸다.
+    /// 손패 초과 시 플레이어가 선택한 카드를 확정 버리기할 때 호출.
     /// </summary>
-    public void DiscardHand()
+    public void DiscardCards(IReadOnlyList<CardData> cards)
     {
-        discardPile.AddRange(hand);
-        hand.Clear();
+        foreach (var card in cards)
+        {
+            if (hand.Remove(card))
+                discardPile.Add(card);
+        }
     }
 
     // ─── Private Helpers ───
@@ -157,11 +144,5 @@ public class DeckManager : MonoBehaviour
             int j = Random.Range(0, i + 1);
             (list[i], list[j]) = (list[j], list[i]);
         }
-    }
-    
-    // [추가] CombatManager가 결산 때 호출할 메서드
-    public void AddBonusDraw(int count)
-    {
-        bonusDrawForNextTurn += count;
     }
 }

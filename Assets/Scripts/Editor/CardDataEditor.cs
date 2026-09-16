@@ -14,8 +14,6 @@ public class CardDataEditor : Editor
     private static readonly Color ColorWater = new Color(0.15f, 0.55f, 1.00f);
     private static readonly Color ColorEarth = new Color(0.55f, 0.35f, 0.10f);
     private static readonly Color ColorWind  = new Color(0.40f, 0.85f, 0.45f);
-    private static readonly Color ColorLight = new Color(1.00f, 0.95f, 0.35f);
-    private static readonly Color ColorDark  = new Color(0.50f, 0.20f, 0.75f);
 
     // ─── 문양 이모지 라벨 ───
     private static readonly string[] SymbolLabels =
@@ -25,8 +23,6 @@ public class CardDataEditor : Editor
         "💧",  // Water
         "🪨",  // Earth
         "💨",  // Wind
-        "✨",  // Light
-        "🌑",  // Dark
     };
 
     // 셀 하나의 픽셀 크기
@@ -49,6 +45,7 @@ public class CardDataEditor : Editor
     // SerializedProperty 캐시 (Card 부분)
     private SerializedProperty propCardName;
     private SerializedProperty propDescription;
+    private SerializedProperty propCategory;
     private SerializedProperty propEffects;
 
     private void OnEnable()
@@ -61,6 +58,7 @@ public class CardDataEditor : Editor
         // Card
         propCardName         = serializedObject.FindProperty("cardName");
         propDescription      = serializedObject.FindProperty("description");
+        propCategory         = serializedObject.FindProperty("category");
         propEffects             = serializedObject.FindProperty("effects");
     }
 
@@ -82,7 +80,8 @@ public class CardDataEditor : Editor
         DrawSectionHeader("📝 카드 정보");
         EditorGUILayout.PropertyField(propCardName);
         EditorGUILayout.PropertyField(propDescription);
-        
+        EditorGUILayout.PropertyField(propCategory);
+
         EditorGUILayout.Space(4);
         DrawSectionHeader("⚔️ 배치 효과");
         EditorGUILayout.PropertyField(propEffects, true);
@@ -364,8 +363,6 @@ public class CardDataEditor : Editor
             SymbolType.Water => ColorWater,
             SymbolType.Earth => ColorEarth,
             SymbolType.Wind  => ColorWind,
-            SymbolType.Light => ColorLight,
-            SymbolType.Dark  => ColorDark,
             _                => ColorNone,
         };
     }

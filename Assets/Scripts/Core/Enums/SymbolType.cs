@@ -9,6 +9,4 @@ public enum SymbolType
     Water,      // 물 문양
     Earth,      // 땅 문양
     Wind,       // 바람 문양
-    Light,      // 빛 문양
-    Dark,       // 어둠 문양
 }

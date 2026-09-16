@@ -26,14 +26,10 @@ public class CardView : MonoBehaviour,
     [SerializeField] private TextMeshProUGUI cardNameText;
     [SerializeField] private TextMeshProUGUI descriptionText;
     [SerializeField] private TextMeshProUGUI powerText;
-    [SerializeField] private Image cardTypeIndicator;
     [SerializeField] private RectTransform blockPreviewRoot;
     [SerializeField, Min(1f)] private float blockPreviewTileSize = 18f;
     [SerializeField, Min(0f)] private float blockPreviewTileGap = 2f;
     [SerializeField, Range(0f, 1f)] private float blockPreviewAlpha = 1f;
-
-    private static readonly Color attackColor  = new(0.85f, 0.25f, 0.25f, 1f);
-    private static readonly Color defenseColor = new(0.25f, 0.45f, 0.85f, 1f);
 
     // ── Runtime ──
     [Header("Runtime Debug")]
@@ -103,9 +99,6 @@ public class CardView : MonoBehaviour,
         if (cardNameText != null) cardNameText.text = data.CardName;
         if (descriptionText != null) descriptionText.text = data.FormattedDescription;
         if (powerText != null)    powerText.text    = data.BasePower.ToString();
-
-        if (cardTypeIndicator != null)
-            cardTypeIndicator.color = data.Type == CardType.Attack ? attackColor : defenseColor;
 
         BuildBlockPreview(data);
     }
@@ -185,13 +178,9 @@ public class CardView : MonoBehaviour,
 
         if (placed)
         {
-            canvasGroup.alpha          = 1f;
-            canvasGroup.blocksRaycasts = true;
-
-            if (handHoverAnimator != null)
-                handHoverAnimator.MarkCardInactive(transform);
-            else
-                gameObject.SetActive(false);
+            // 손패는 이제 턴을 넘어 유지되므로(HandView가 매 턴 전체를 지우지 않음),
+            // 사용된 카드는 숨기지 않고 바로 파괴해야 핸드에 잔재가 쌓이지 않는다.
+            Destroy(gameObject);
         }
         else
         {

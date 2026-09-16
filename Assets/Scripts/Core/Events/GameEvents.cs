@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 
 /// <summary>
 /// 글로벌 이벤트 버스 — 시스템 간 결합도를 최소화하기 위한 정적 이벤트 허브.
@@ -32,6 +33,10 @@ public static class GameEvents
     public static event Action OnTurnEndRequested;
     /// <summary> 결산 페이즈 시작 </summary>
     public static event Action OnResolutionPhaseStarted;
+    /// <summary> 손패 초과로 버릴 카드를 선택해야 할 때 발행 (버려야 할 장수) </summary>
+    public static event Action<int> OnDiscardPhaseStarted;
+    /// <summary> 플레이어가 버릴 카드 선택을 확정했을 때 발행 (버릴 카드 목록) </summary>
+    public static event Action<IReadOnlyList<CardData>> OnDiscardConfirmed;
     /// <summary> 적 턴 시작 </summary>
     public static event Action OnEnemyTurnStarted;
 
@@ -87,6 +92,8 @@ public static class GameEvents
     public static void RaisePlacementPhaseStarted() => OnPlacementPhaseStarted?.Invoke();
     public static void RaiseTurnEndRequested() => OnTurnEndRequested?.Invoke();
     public static void RaiseResolutionPhaseStarted() => OnResolutionPhaseStarted?.Invoke();
+    public static void RaiseDiscardPhaseStarted(int discardCount) => OnDiscardPhaseStarted?.Invoke(discardCount);
+    public static void RaiseDiscardConfirmed(IReadOnlyList<CardData> cards) => OnDiscardConfirmed?.Invoke(cards);
     public static void RaiseEnemyTurnStarted() => OnEnemyTurnStarted?.Invoke();
 
     public static void RaiseCardDrawn(CardData card) => OnCardDrawn?.Invoke(card);
@@ -120,6 +127,8 @@ public static class GameEvents
         OnPlacementPhaseStarted = null;
         OnTurnEndRequested = null;
         OnResolutionPhaseStarted = null;
+        OnDiscardPhaseStarted = null;
+        OnDiscardConfirmed = null;
         OnEnemyTurnStarted = null;
         OnCardDrawn = null;
         OnCardUsed = null;

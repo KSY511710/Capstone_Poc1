@@ -9,6 +9,9 @@ public class HandView : MonoBehaviour
     [SerializeField] private CardView cardPrefab;
     [SerializeField] private Transform handContainer;
 
+    /// <summary> 손패 카드들의 부모 Transform. 버리기 UI(DiscardSelectionView)에서 참조한다. </summary>
+    public Transform HandContainer => handContainer;
+
     private void Awake()
     {
         if (handContainer == null)
@@ -18,13 +21,11 @@ public class HandView : MonoBehaviour
     private void OnEnable()
     {
         GameEvents.OnCardDrawn += HandleCardDrawn;
-        GameEvents.OnDrawPhaseStarted += HandleDrawPhaseStarted;
     }
 
     private void OnDisable()
     {
         GameEvents.OnCardDrawn -= HandleCardDrawn;
-        GameEvents.OnDrawPhaseStarted -= HandleDrawPhaseStarted;
     }
 
     private void HandleCardDrawn(CardData cardData)
@@ -37,16 +38,5 @@ public class HandView : MonoBehaviour
 
         CardView newCard = Instantiate(cardPrefab, handContainer);
         newCard.Setup(cardData);
-    }
-
-    private void HandleDrawPhaseStarted(int _)
-    {
-        ClearHandUI();
-    }
-
-    private void ClearHandUI()
-    {
-        foreach (Transform child in handContainer)
-            Destroy(child.gameObject);
     }
 }

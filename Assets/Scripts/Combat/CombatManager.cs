@@ -1,4 +1,5 @@
 using System.Collections;
+using System.Collections.Generic;
 using UnityEngine;
 
 public class CombatManager : MonoBehaviour
@@ -43,6 +44,7 @@ public class CombatManager : MonoBehaviour
         GameEvents.OnResolutionResult       += HandleResolutionResult;
         GameEvents.OnResolutionComplete     += HandleResolutionComplete;
         GameEvents.OnOverlapEffectTriggered += HandleOverlapEffectTriggered;
+        GameEvents.OnDiscardConfirmed       += HandleDiscardConfirmed;
     }
 
     private void OnDisable()
@@ -51,6 +53,7 @@ public class CombatManager : MonoBehaviour
         GameEvents.OnResolutionResult       -= HandleResolutionResult;
         GameEvents.OnResolutionComplete     -= HandleResolutionComplete;
         GameEvents.OnOverlapEffectTriggered -= HandleOverlapEffectTriggered;
+        GameEvents.OnDiscardConfirmed       -= HandleDiscardConfirmed;
     }
 
     // ═══════════════════════════════════════════
@@ -82,6 +85,7 @@ public class CombatManager : MonoBehaviour
             case CombatState.PlayerDraw: EnterPlayerDraw(); break;
             case CombatState.Placement:  EnterPlacement();  break;
             case CombatState.Resolution: EnterResolution(); break;
+            case CombatState.Discard:    EnterDiscard();    break;
             case CombatState.EnemyTurn:  EnterEnemyTurn();  break;
             case CombatState.Win:
             case CombatState.Lose:       EnterCombatEnd(newState == CombatState.Win); break;
@@ -95,8 +99,11 @@ public class CombatManager : MonoBehaviour
         turnCount++;
         player.ResetDefense();
 
-        int drawCount = deckManager.DrawCountPerTurn + extraDrawNextTurn;
+        // 이번 턴 목표 손패 수 = 기본 목표(7) + "다음 턴 추가 드로우" 효과 보너스
+        int turnTargetHandSize = deckManager.TargetHandSize + extraDrawNextTurn;
         extraDrawNextTurn = 0;
+
+        int drawCount = Mathf.Max(0, turnTargetHandSize - deckManager.Hand.Count);
 
         GameEvents.RaiseDrawPhaseStarted(drawCount);
         deckManager.DrawCards(drawCount);
@@ -111,6 +118,12 @@ public class CombatManager : MonoBehaviour
     private void EnterResolution()
     {
         StartCoroutine(ResolutionRoutine());
+    }
+
+    private void EnterDiscard()
+    {
+        int excess = Mathf.Max(0, deckManager.Hand.Count - deckManager.TargetHandSize);
+        GameEvents.RaiseDiscardPhaseStarted(excess);
     }
 
     private void EnterEnemyTurn()
@@ -138,7 +151,14 @@ public class CombatManager : MonoBehaviour
 
         yield return new WaitForSeconds(resolutionDisplayTime);
 
-        TransitionTo(enemy.IsDead ? CombatState.Win : CombatState.EnemyTurn);
+        if (enemy.IsDead)
+        {
+            TransitionTo(CombatState.Win);
+            yield break;
+        }
+
+        bool needsDiscard = deckManager.Hand.Count > deckManager.TargetHandSize;
+        TransitionTo(needsDiscard ? CombatState.Discard : CombatState.EnemyTurn);
     }
 
     private IEnumerator EnemyTurnRoutine()
@@ -192,10 +212,16 @@ public class CombatManager : MonoBehaviour
         TransitionTo(CombatState.Resolution);
     }
 
-    // 그리드 정리 완료 — 손패 버리기
     private void HandleResolutionComplete()
     {
-        deckManager.DiscardHand();
         resolutionComplete = true;
+    }
+
+    private void HandleDiscardConfirmed(IReadOnlyList<CardData> cards)
+    {
+        if (currentState != CombatState.Discard) return;
+
+        deckManager.DiscardCards(cards);
+        TransitionTo(CombatState.EnemyTurn);
     }
 }

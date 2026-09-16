@@ -16,6 +16,9 @@ public class CardData : ScriptableObject
     [TextArea(2, 4)]
     [SerializeField] private string description = "";
 
+    [Tooltip("카드 종류 — 카드 효과와는 별개로 카드 자체를 분류하는 용도. UI 표시는 추후 추가 예정.")]
+    [SerializeField] private CardCategory category = CardCategory.Attack;
+
     [Header("효과 목록")]
     [Tooltip("배치 효과 — 그리드에 배치되는 즉시 적용된다.")]
     [SerializeField] private List<CardEffect> effects = new();
@@ -32,6 +35,7 @@ public class CardData : ScriptableObject
     // ── Public Properties ──
     public string CardName => cardName;
     public string Description => description;
+    public CardCategory Category => category;
     public IReadOnlyList<CardEffect> Effects => effects;
 
     // {0} → effects[0].power, {1} → effects[1].power 치환
