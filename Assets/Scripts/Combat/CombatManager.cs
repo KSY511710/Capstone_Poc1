@@ -234,4 +234,19 @@ public class CombatManager : MonoBehaviour
         enemyDeadAfterResolution = enemy.IsDead;
         resolutionComplete = true;
     }
+
+    /// <summary>
+    /// 이번 전투에서 사용할 적 데이터를 주입한다. 같은 Combat 씬을 재사용하면서도
+    /// 일반 전투/엘리트/보스마다 다른 적(체력·공격력)으로 싸우게 하는 핵심 지점.
+    /// CombatBootstrap이 StartCombat()을 호출하기 전에 먼저 호출해야 한다.
+    /// encounterData가 null이면(예: 테스트로 씬을 직접 Play한 경우) 기존 Inspector 고정값을 그대로 사용한다.
+    /// </summary>
+    /// <param name="encounterData">RunState.pendingEncounter에서 가져온 조우 데이터</param>
+    public void SetEncounter(EncounterData encounterData)
+    {
+        if (encounterData == null) return;  // RunState 없이 씬을 바로 테스트 플레이하는 경우 대비
+
+        enemy.SetMaxHp(encounterData.EnemyMaxHp);
+        enemyBaseDamage = encounterData.EnemyBaseDamage;
+    }
 }

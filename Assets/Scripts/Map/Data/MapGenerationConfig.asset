@@ -1,0 +1,24 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 6c270fb622f25f9449cfe885a32e8ac5, type: 3}
+  m_Name: MapGenerationConfig
+  m_EditorClassIdentifier: Assembly-CSharp::MapGenerationConfig
+  rowCount: 15
+  columnsPerRow: 6
+  pathCount: 6
+  restRowsBeforeBoss: 1
+  nodeTypes:
+  - {fileID: 11400000, guid: c1c66bbc3396bf04d9339c85a0593409, type: 2}
+  - {fileID: 11400000, guid: d57f497ae9fbe8f4d8870a7fd4d45b28, type: 2}
+  - {fileID: 11400000, guid: 59d0985f95aa4364cad2b98cbf89c5e2, type: 2}
+  - {fileID: 11400000, guid: 06bbe0bbd63c3c1419b24434b3680684, type: 2}
+  - {fileID: 11400000, guid: ad235af580baae043a92892aeb5e934f, type: 2}

@@ -109,4 +109,11 @@ public class ArtifactManager : MonoBehaviour
         Debug.Log($"[ArtifactManager] {artifact.ArtifactName} 발동 — 공격 {result.damage}, 방어 {result.defense}, 회복 {result.heal}, 드로우 +{result.draw}, 즉시드로우 +{result.drawNow}");
         GameEvents.RaiseOverlapEffectTriggered(result);
     }
+
+    /// <summary>
+    /// RunState에 저장된 현재 런의 아티팩트를 이 전투에 장착시킨다.
+    /// CombatBootstrap이 StartCombat()을 호출하기 전에 먼저 호출해야 한다.
+    /// </summary>
+    /// <param name="artifacts">RunState.artifacts에서 가져온 아티팩트 목록</param>
+    public void SetEquippedArtifacts(List<ArtifactData> artifacts) => equippedArtifacts = artifacts;
 }

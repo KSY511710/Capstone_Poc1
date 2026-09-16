@@ -75,6 +75,12 @@ public static class GameEvents
     /// <summary> 플레이어 방어도 변경 시 (현재 방어도) </summary>
     public static event Action<int> OnPlayerDefenseChanged;
 
+    // ─── 맵 ───
+    /// <summary> 플레이어가 맵에서 노드를 클릭해 선택했을 때 발행 (선택된 노드) </summary>
+    public static event Action<MapNode> OnMapNodeSelected;
+    /// <summary> 노드의 visited/available 상태가 바뀌어 맵 UI를 다시 그려야 할 때 발행 </summary>
+    public static event Action OnMapUpdated;
+
     // ═══════════════════════════════════════════
     //  Invoke Methods (이벤트 발행 전용)
     // ═══════════════════════════════════════════
@@ -113,6 +119,9 @@ public static class GameEvents
     public static void RaiseEnemyHpChanged(int current, int max) => OnEnemyHpChanged?.Invoke(current, max);
     public static void RaisePlayerDefenseChanged(int defense) => OnPlayerDefenseChanged?.Invoke(defense);
 
+    public static void RaiseMapNodeSelected(MapNode node) => OnMapNodeSelected?.Invoke(node);
+    public static void RaiseMapUpdated() => OnMapUpdated?.Invoke();
+
     /// <summary>
     /// 모든 이벤트 구독을 해제한다.
     /// 씬 전환 시 호출하여 좀비 리스너를 방지한다.
@@ -143,5 +152,7 @@ public static class GameEvents
         OnPlayerHpChanged = null;
         OnEnemyHpChanged = null;
         OnPlayerDefenseChanged = null;
+        OnMapNodeSelected = null;
+        OnMapUpdated = null;
     }
 }

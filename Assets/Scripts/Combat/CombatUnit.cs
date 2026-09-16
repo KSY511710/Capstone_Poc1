@@ -103,4 +103,15 @@ public class CombatUnit : MonoBehaviour
         else
             GameEvents.RaiseEnemyHpChanged(currentHp, maxHp);
     }
+
+    /// <summary>
+    /// 이 유닛의 최대 체력을 바꾸고 현재 체력을 그 값으로 채운다.
+    /// 노드 타입(일반/엘리트/보스)에 따라 적의 체력을 다르게 세팅할 때 사용.
+    /// </summary>
+    /// <param name="newMaxHp">새로 적용할 최대 체력</param>
+    public void SetMaxHp(int newMaxHp)
+    {
+        maxHp = newMaxHp;
+        currentHp = maxHp;
+    }
 }

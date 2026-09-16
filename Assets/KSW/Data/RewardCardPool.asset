@@ -1,0 +1,30 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: accc8a5f1e1b4e44ae42e4dcc86aea44, type: 3}
+  m_Name: RewardCardPool
+  m_EditorClassIdentifier: Assembly-CSharp::CardPool
+  cards:
+  - {fileID: 11400000, guid: d666f6431689b7940af30b7bcd8e0acf, type: 2}
+  - {fileID: 11400000, guid: b87ffa891dcce9f4f94934e2b68df258, type: 2}
+  - {fileID: 11400000, guid: aea0c7b543a720b4b812b5535ca9fcf1, type: 2}
+  - {fileID: 11400000, guid: 7a0383cfc27d9d24c94a3659d7b16e51, type: 2}
+  - {fileID: 11400000, guid: 614ad01170cb78640be25698c6d709e0, type: 2}
+  - {fileID: 11400000, guid: 1a53b028b66718d4591ee82af2ac1a04, type: 2}
+  - {fileID: 11400000, guid: 9b509c7d50f2a44428c5cd229985dfa2, type: 2}
+  - {fileID: 11400000, guid: 6ab3ac1ce9ba2be48a59b3343cafe341, type: 2}
+  - {fileID: 11400000, guid: 9c12bd61d21cd35449ff52920024e448, type: 2}
+  - {fileID: 11400000, guid: 79bb7f7c93f7e214aa26735e17566a6a, type: 2}
+  - {fileID: 11400000, guid: de982e82481f9234599123745c13319e, type: 2}
+  - {fileID: 11400000, guid: 0c166b91d60151b4b8e000fd66906865, type: 2}
+  - {fileID: 11400000, guid: 510599eed819545418558bd339297f00, type: 2}
+  - {fileID: 11400000, guid: 697477a92d7d52b489acb3415198e3c5, type: 2}
+  - {fileID: 11400000, guid: 6a2ec580f0dc79e4d97a4e440c00974a, type: 2}

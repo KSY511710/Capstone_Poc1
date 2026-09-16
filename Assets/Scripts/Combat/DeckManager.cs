@@ -188,4 +188,11 @@ public class DeckManager : MonoBehaviour
     {
         bonusDrawForNextTurn += count;
     }
+
+    /// <summary>
+    /// RunState에 저장된 현재 런의 덱을 이 전투의 시작 덱으로 주입한다.
+    /// CombatBootstrap이 StartCombat()을 호출하기 전에 먼저 호출해야 한다.
+    /// </summary>
+    /// <param name="cards">RunState.deck에서 가져온 카드 목록</param>
+    public void SetStarterDeck(List<CardData> cards) => starterDeck = cards;
 }
