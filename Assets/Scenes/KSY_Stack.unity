@@ -1481,21 +1481,16 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::DeckManager
   starterDeck:
-  - {fileID: 11400000, guid: 3214cdc99514ea649942961fe70e6a3a, type: 2}
-  - {fileID: 11400000, guid: 5dd1603681b02e049bd6c3f4871d87d0, type: 2}
-  - {fileID: 11400000, guid: 24f11e06037d93641b4c3903bde5f058, type: 2}
-  - {fileID: 11400000, guid: dbbf0f65f141ebb44a80e164d8aa20ea, type: 2}
-  - {fileID: 11400000, guid: b699e93177bb48c4e9f858d730950798, type: 2}
-  - {fileID: 11400000, guid: bbb63b77f1a63f74f80148eb844d0f7d, type: 2}
-  - {fileID: 11400000, guid: 604a5120104631a489e2f6dd8d5988b6, type: 2}
-  - {fileID: 11400000, guid: 3b0e92615512a9d44ad8e27f7477374f, type: 2}
-  - {fileID: 11400000, guid: a6db14a71aaf9364b8e82730f61ad37b, type: 2}
-  - {fileID: 11400000, guid: 6c14c12bcc538664e8dfb7d44d061b23, type: 2}
-  - {fileID: 11400000, guid: 035770ff60079984399752bcd4d5f36e, type: 2}
-  - {fileID: 11400000, guid: a73167686a706fc4d93fa47f94748dc7, type: 2}
-  - {fileID: 11400000, guid: 0c88feef0588fee45bd089f8afa2cb66, type: 2}
-  - {fileID: 11400000, guid: 35556961e93d99f48a5b4c9f27fe28e8, type: 2}
-  - {fileID: 11400000, guid: d0f21db4347c11747bdf61c6d5c0a951, type: 2}
+  - {fileID: 11400000, guid: 3ed675205df58e14d8cf877074c4edbe, type: 2}
+  - {fileID: 11400000, guid: a79ef440691336f4586732c5360f422f, type: 2}
+  - {fileID: 11400000, guid: fe15124a60f355e4392f23e775f4a33f, type: 2}
+  - {fileID: 11400000, guid: 612364d71ed1ff844a2b3453390e237e, type: 2}
+  - {fileID: 11400000, guid: d6e4416e6d8f2604a9b2573d26e4f98b, type: 2}
+  - {fileID: 11400000, guid: f951f46fa4398184089439e3527be926, type: 2}
+  - {fileID: 11400000, guid: 08d2d57d5ce84604280bfb398af42bac, type: 2}
+  - {fileID: 11400000, guid: d2aa4594470560447966bc40dbaa0301, type: 2}
+  - {fileID: 11400000, guid: 58a0e9fc53c2c3e49a8f257086435ffa, type: 2}
+  - {fileID: 11400000, guid: 8e2e5e193fa7fdf43ab0d9a3b11ccdc3, type: 2}
   targetHandSize: 7
 --- !u!223 &632159527 stripped
 Canvas:
