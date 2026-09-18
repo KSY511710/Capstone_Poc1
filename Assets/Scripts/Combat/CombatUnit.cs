@@ -36,8 +36,7 @@ public class CombatUnit : MonoBehaviour
         if (amount <= 0) return;
         defense += amount;
 
-        if (isPlayer)
-            GameEvents.RaisePlayerDefenseChanged(defense);
+        BroadcastDefenseChanged();
     }
 
     /// <summary>
@@ -47,8 +46,7 @@ public class CombatUnit : MonoBehaviour
     {
         defense = 0;
 
-        if (isPlayer)
-            GameEvents.RaisePlayerDefenseChanged(defense);
+        BroadcastDefenseChanged();
     }
 
     /// <summary>
@@ -68,10 +66,10 @@ public class CombatUnit : MonoBehaviour
         currentHp = Mathf.Max(0, currentHp - remainingDamage);
 
         BroadcastHpChanged();
+        BroadcastDefenseChanged();
 
         if (isPlayer)
         {
-            GameEvents.RaisePlayerDefenseChanged(defense);
             if (absorbed > 0)
                 GameEvents.RaiseDamageAbsorbedByPlayer(absorbed);
             if (remainingDamage > 0)
@@ -102,5 +100,13 @@ public class CombatUnit : MonoBehaviour
             GameEvents.RaisePlayerHpChanged(currentHp, maxHp);
         else
             GameEvents.RaiseEnemyHpChanged(currentHp, maxHp);
+    }
+
+    private void BroadcastDefenseChanged()
+    {
+        if (isPlayer)
+            GameEvents.RaisePlayerDefenseChanged(defense);
+        else
+            GameEvents.RaiseEnemyDefenseChanged(defense);
     }
 }

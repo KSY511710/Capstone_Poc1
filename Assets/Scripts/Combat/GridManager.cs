@@ -24,14 +24,12 @@ public class GridManager : MonoBehaviour
 
     private void OnEnable()
     {
-        GameEvents.OnDrawPhaseStarted       += HandleDrawPhaseStarted;
-        GameEvents.OnResolutionPhaseStarted += HandleResolutionPhaseStarted;
+        GameEvents.OnEnemyTurnStarted += HandleEnemyTurnStarted;
     }
 
     private void OnDisable()
     {
-        GameEvents.OnDrawPhaseStarted       -= HandleDrawPhaseStarted;
-        GameEvents.OnResolutionPhaseStarted -= HandleResolutionPhaseStarted;
+        GameEvents.OnEnemyTurnStarted -= HandleEnemyTurnStarted;
     }
 
     // ═══════════════════════════════════════════
@@ -139,12 +137,7 @@ public class GridManager : MonoBehaviour
 
     // ─── Event Handlers ───
 
-    private void HandleDrawPhaseStarted(int _) => ClearGrid();
-
-    // 카드 효과는 배치 시점에 이미 적용되었으므로, 턴 종료 시에는 그리드 정리만 하면 된다.
-    private void HandleResolutionPhaseStarted()
-    {
-        ClearGrid();
-        GameEvents.RaiseResolutionComplete();
-    }
+    // 그리드는 적 턴이 시작되는 시점에 정리한다 — 턴 종료 직후~버리기 페이즈 동안은
+    // 이번 턴에 배치한 블록이 그대로 보인다.
+    private void HandleEnemyTurnStarted() => ClearGrid();
 }

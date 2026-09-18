@@ -9,7 +9,6 @@ using UnityEngine.UI;
 public class BlockGhostView : MonoBehaviour
 {
     private Image[] tiles;
-    private Color[] baseColors; // 심볼별 원본 색상 보존
 
     // ═══════════════════════════════════════════
     //  Init
@@ -29,14 +28,12 @@ public class BlockGhostView : MonoBehaviour
         cg.interactable   = false;
 
         BuildTiles(card, cellSize, rotationSteps);
-        SetValidity(true);
     }
 
     /// <summary> 회전(QE) 등으로 모양이 바뀌었을 때 타일을 다시 만든다. </summary>
     public void Rebuild(CardData card, float cellSize, int rotationSteps)
     {
         BuildTiles(card, cellSize, rotationSteps);
-        SetValidity(true);
     }
 
     private void BuildTiles(CardData card, float cellSize, int rotationSteps)
@@ -45,8 +42,7 @@ public class BlockGhostView : MonoBehaviour
             Destroy(transform.GetChild(i).gameObject);
 
         var occupied = card.GetOccupiedCells(rotationSteps);
-        tiles      = new Image[occupied.Length];
-        baseColors = new Color[occupied.Length];
+        tiles = new Image[occupied.Length];
 
         float tileSize = cellSize - 6f;
 
@@ -61,8 +57,12 @@ public class BlockGhostView : MonoBehaviour
             rt.sizeDelta        = Vector2.one * tileSize;
             rt.anchoredPosition = new Vector2(col * cellSize, -row * cellSize);
 
-            tiles[i]      = tileGo.GetComponent<Image>();
-            baseColors[i] = SymbolVisuals.GetColor(symbol);
+            var image = tileGo.GetComponent<Image>();
+            Color color = SymbolVisuals.GetColor(symbol);
+            color.a = 0.70f;
+            image.color = color;
+
+            tiles[i] = image;
         }
     }
 
@@ -74,15 +74,5 @@ public class BlockGhostView : MonoBehaviour
     public void UpdatePosition(Vector2 screenPos)
     {
         transform.position = screenPos;
-    }
-
-    /// <summary>
-    /// 배치 가능 여부에 따라 타일 색을 바꾼다.
-    /// 가능: 심볼 원색 (반투명) / 불가: 빨간 오버레이
-    /// </summary>
-    public void SetValidity(bool canPlace)
-    {
-        for (int i = 0; i < tiles.Length; i++)
-            tiles[i].color = new Color(baseColors[i].r, baseColors[i].g, baseColors[i].b, 0.70f);
     }
 }

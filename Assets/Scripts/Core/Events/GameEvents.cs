@@ -31,14 +31,14 @@ public static class GameEvents
     public static event Action OnPlacementPhaseStarted;
     /// <summary> 플레이어가 턴 종료 버튼을 누름 </summary>
     public static event Action OnTurnEndRequested;
-    /// <summary> 결산 페이즈 시작 </summary>
-    public static event Action OnResolutionPhaseStarted;
     /// <summary> 손패 초과로 버릴 카드를 선택해야 할 때 발행 (버려야 할 장수) </summary>
     public static event Action<int> OnDiscardPhaseStarted;
     /// <summary> 플레이어가 버릴 카드 선택을 확정했을 때 발행 (버릴 카드 목록) </summary>
     public static event Action<IReadOnlyList<CardData>> OnDiscardConfirmed;
     /// <summary> 적 턴 시작 </summary>
     public static event Action OnEnemyTurnStarted;
+    /// <summary> 적의 다음 턴 행동(의도)이 정해졌을 때 발행 — 적 의도 UI 표시용 </summary>
+    public static event Action<EnemyIntent> OnEnemyIntentChanged;
 
     // ─── 덱 & 카드 ───
     /// <summary> 카드가 드로우되었을 때 (드로우된 카드 데이터) </summary>
@@ -53,8 +53,6 @@ public static class GameEvents
     // ─── 결산 ───
     /// <summary> 카드가 그리드에 배치되는 즉시 그 카드의 결산 결과 발행 </summary>
     public static event Action<ResolutionResult> OnResolutionResult;
-    /// <summary> 턴 종료 시 그리드 정리 완료 신호 — 손패 버리기·다음 페이즈 전이 타이밍용 </summary>
-    public static event Action OnResolutionComplete;
     /// <summary> 블록 겹침 시 즉시 발동하는 효과 발행 (아티팩트 발동 결과) </summary>
     public static event Action<ResolutionResult> OnOverlapEffectTriggered;
     /// <summary> 그리드 배치 중 특정 색상이 겹쳤을 때 발행 (겹친 색, 겹친 칸 수) — 아티팩트 진행도 누적용 </summary>
@@ -75,6 +73,8 @@ public static class GameEvents
     public static event Action<int, int> OnEnemyHpChanged;
     /// <summary> 플레이어 방어도 변경 시 (현재 방어도) </summary>
     public static event Action<int> OnPlayerDefenseChanged;
+    /// <summary> 적 방어도 변경 시 (현재 방어도) </summary>
+    public static event Action<int> OnEnemyDefenseChanged;
 
     // ═══════════════════════════════════════════
     //  Invoke Methods (이벤트 발행 전용)
@@ -91,10 +91,10 @@ public static class GameEvents
     public static void RaiseDrawPhaseStarted(int drawCount) => OnDrawPhaseStarted?.Invoke(drawCount);
     public static void RaisePlacementPhaseStarted() => OnPlacementPhaseStarted?.Invoke();
     public static void RaiseTurnEndRequested() => OnTurnEndRequested?.Invoke();
-    public static void RaiseResolutionPhaseStarted() => OnResolutionPhaseStarted?.Invoke();
     public static void RaiseDiscardPhaseStarted(int discardCount) => OnDiscardPhaseStarted?.Invoke(discardCount);
     public static void RaiseDiscardConfirmed(IReadOnlyList<CardData> cards) => OnDiscardConfirmed?.Invoke(cards);
     public static void RaiseEnemyTurnStarted() => OnEnemyTurnStarted?.Invoke();
+    public static void RaiseEnemyIntentChanged(EnemyIntent intent) => OnEnemyIntentChanged?.Invoke(intent);
 
     public static void RaiseCardDrawn(CardData card) => OnCardDrawn?.Invoke(card);
     public static void RaiseCardUsed(CardData card) => OnCardUsed?.Invoke(card);
@@ -102,7 +102,6 @@ public static class GameEvents
     public static void RaiseBlockPlaced(CardData card, int x, int y) => OnBlockPlaced?.Invoke(card, x, y);
 
     public static void RaiseResolutionResult(ResolutionResult result) => OnResolutionResult?.Invoke(result);
-    public static void RaiseResolutionComplete() => OnResolutionComplete?.Invoke();
     public static void RaiseOverlapEffectTriggered(ResolutionResult result) => OnOverlapEffectTriggered?.Invoke(result);
     public static void RaiseGridColorOverlapped(SymbolType color, int count) => OnGridColorOverlapped?.Invoke(color, count);
     public static void RaiseArtifactProgressChanged(ArtifactData artifact, SymbolType color, int current, int required) => OnArtifactProgressChanged?.Invoke(artifact, color, current, required);
@@ -113,6 +112,7 @@ public static class GameEvents
     public static void RaisePlayerHpChanged(int current, int max) => OnPlayerHpChanged?.Invoke(current, max);
     public static void RaiseEnemyHpChanged(int current, int max) => OnEnemyHpChanged?.Invoke(current, max);
     public static void RaisePlayerDefenseChanged(int defense) => OnPlayerDefenseChanged?.Invoke(defense);
+    public static void RaiseEnemyDefenseChanged(int defense) => OnEnemyDefenseChanged?.Invoke(defense);
 
     /// <summary>
     /// 모든 이벤트 구독을 해제한다.
@@ -126,15 +126,14 @@ public static class GameEvents
         OnDrawPhaseStarted = null;
         OnPlacementPhaseStarted = null;
         OnTurnEndRequested = null;
-        OnResolutionPhaseStarted = null;
         OnDiscardPhaseStarted = null;
         OnDiscardConfirmed = null;
         OnEnemyTurnStarted = null;
+        OnEnemyIntentChanged = null;
         OnCardDrawn = null;
         OnCardUsed = null;
         OnBlockPlaced = null;
         OnResolutionResult = null;
-        OnResolutionComplete = null;
         OnOverlapEffectTriggered = null;
         OnGridColorOverlapped = null;
         OnArtifactProgressChanged = null;
@@ -144,5 +143,6 @@ public static class GameEvents
         OnPlayerHpChanged = null;
         OnEnemyHpChanged = null;
         OnPlayerDefenseChanged = null;
+        OnEnemyDefenseChanged = null;
     }
 }

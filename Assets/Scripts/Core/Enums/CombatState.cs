@@ -7,7 +7,6 @@ public enum CombatState
     None,           // 전투 시작 전 또는 종료 후
     PlayerDraw,     // 플레이어 드로우 페이즈
     Placement,      // 블록 배치 페이즈
-    Resolution,     // 턴 결산 페이즈 (데미지/방어도 적용)
     Discard,        // 손패 초과 시 버릴 카드 선택 대기
     EnemyTurn,      // 적 턴 페이즈
     Win,            // 승리

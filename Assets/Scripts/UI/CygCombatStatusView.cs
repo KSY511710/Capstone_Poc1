@@ -16,7 +16,6 @@ namespace Cyg.UI
         [Header("Optional Runtime Sources")]
         [SerializeField] private CombatUnit playerUnit;
         [SerializeField] private CombatUnit enemyUnit;
-        [SerializeField] private CombatManager combatManager;
         [SerializeField] private bool findUnitsOnEnable = true;
 
         [Header("Text")]
@@ -24,7 +23,7 @@ namespace Cyg.UI
         [SerializeField] private TextMeshProUGUI enemyHpText;
         [SerializeField] private TextMeshProUGUI playerDefenseText;
         [SerializeField] private TextMeshProUGUI playerAttackText;
-        [SerializeField] private TextMeshProUGUI enemyAttackText;
+        [SerializeField] private TextMeshProUGUI enemyDefenseText;
         [SerializeField] private HpTextMode hpTextMode = HpTextMode.CurrentOnly;
 
         [Header("Optional Bars")]
@@ -41,6 +40,7 @@ namespace Cyg.UI
             GameEvents.OnPlayerHpChanged  += HandlePlayerHpChanged;
             GameEvents.OnEnemyHpChanged   += HandleEnemyHpChanged;
             GameEvents.OnPlayerDefenseChanged += HandlePlayerDefenseChanged;
+            GameEvents.OnEnemyDefenseChanged  += HandleEnemyDefenseChanged;
             GameEvents.OnDrawPhaseStarted       += HandleDrawPhaseStarted;
             GameEvents.OnResolutionResult       += HandleResolutionResult;
             GameEvents.OnOverlapEffectTriggered += HandleResolutionResult;
@@ -56,6 +56,7 @@ namespace Cyg.UI
             GameEvents.OnPlayerHpChanged  -= HandlePlayerHpChanged;
             GameEvents.OnEnemyHpChanged   -= HandleEnemyHpChanged;
             GameEvents.OnPlayerDefenseChanged -= HandlePlayerDefenseChanged;
+            GameEvents.OnEnemyDefenseChanged  -= HandleEnemyDefenseChanged;
             GameEvents.OnDrawPhaseStarted       -= HandleDrawPhaseStarted;
             GameEvents.OnResolutionResult       -= HandleResolutionResult;
             GameEvents.OnOverlapEffectTriggered -= HandleResolutionResult;
@@ -69,9 +70,6 @@ namespace Cyg.UI
                 if (units[i].IsPlayer) playerUnit = units[i];
                 else                   enemyUnit  = units[i];
             }
-
-            if (combatManager == null)
-                combatManager = FindAnyObjectByType<CombatManager>();
         }
 
         public void RefreshSnapshot()
@@ -89,11 +87,15 @@ namespace Cyg.UI
             }
 
             if (enemyUnit != null)
+            {
                 HandleEnemyHpChanged(enemyUnit.CurrentHp, enemyUnit.MaxHp);
+                HandleEnemyDefenseChanged(enemyUnit.Defense);
+            }
             else
             {
                 SetText(enemyHpText, missingValueText);
                 SetFill(enemyHpFill, 0f);
+                SetText(enemyDefenseText, missingValueText);
             }
 
             RefreshAttackTexts();
@@ -102,11 +104,6 @@ namespace Cyg.UI
         private void RefreshAttackTexts()
         {
             SetText(playerAttackText, accumulatedDamage.ToString());
-
-            string enemyAtk = combatManager != null
-                ? combatManager.EnemyBaseDamage.ToString()
-                : missingValueText;
-            SetText(enemyAttackText, enemyAtk);
         }
 
         // 카드 효과는 배치 즉시 발동하므로, 이번 턴 동안 실제로 적용된 데미지를 누적해서 보여준다.
@@ -137,6 +134,11 @@ namespace Cyg.UI
         private void HandlePlayerDefenseChanged(int defense)
         {
             SetText(playerDefenseText, defense.ToString());
+        }
+
+        private void HandleEnemyDefenseChanged(int defense)
+        {
+            SetText(enemyDefenseText, defense.ToString());
         }
 
         private void SetHpText(TextMeshProUGUI target, int current, int max)

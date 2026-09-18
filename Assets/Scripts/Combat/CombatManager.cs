@@ -12,12 +12,10 @@ public class CombatManager : MonoBehaviour
     [Header("적 설정")]
     [SerializeField] private int enemyBaseDamage = 8;
     public int EnemyBaseDamage => enemyBaseDamage;
+    [SerializeField] private int enemyDefenseAmount = 8;
+    public int EnemyDefenseAmount => enemyDefenseAmount;
 
     [Header("페이즈 딜레이")]
-    [Tooltip("턴 종료 후 결산 시작까지 대기")]
-    [SerializeField] private float resolutionDelay = 0.5f;
-    [Tooltip("결산 결과 보여주는 시간")]
-    [SerializeField] private float resolutionDisplayTime = 1f;
     [Tooltip("적 공격 전 대기")]
     [SerializeField] private float enemyAttackDelay = 1f;
     [Tooltip("적 공격 후 다음 턴까지 대기")]
@@ -32,7 +30,7 @@ public class CombatManager : MonoBehaviour
 
     private int extraDrawNextTurn;
     private int enemyAttackReductionNextTurn;
-    private bool resolutionComplete;
+    private bool enemyAttackTurn = true; // 적은 공격 → 방어 순서로 번갈아 행동한다
 
     // ═══════════════════════════════════════════
     //  Unity Lifecycle
@@ -42,7 +40,6 @@ public class CombatManager : MonoBehaviour
     {
         GameEvents.OnTurnEndRequested       += HandleTurnEndRequested;
         GameEvents.OnResolutionResult       += HandleResolutionResult;
-        GameEvents.OnResolutionComplete     += HandleResolutionComplete;
         GameEvents.OnOverlapEffectTriggered += HandleOverlapEffectTriggered;
         GameEvents.OnDiscardConfirmed       += HandleDiscardConfirmed;
     }
@@ -51,7 +48,6 @@ public class CombatManager : MonoBehaviour
     {
         GameEvents.OnTurnEndRequested       -= HandleTurnEndRequested;
         GameEvents.OnResolutionResult       -= HandleResolutionResult;
-        GameEvents.OnResolutionComplete     -= HandleResolutionComplete;
         GameEvents.OnOverlapEffectTriggered -= HandleOverlapEffectTriggered;
         GameEvents.OnDiscardConfirmed       -= HandleDiscardConfirmed;
     }
@@ -63,9 +59,18 @@ public class CombatManager : MonoBehaviour
     public void StartCombat()
     {
         turnCount = 0;
+        enemyAttackTurn = true;
         deckManager.Initialize();
         GameEvents.RaiseCombatStarted();
+        GameEvents.RaiseEnemyIntentChanged(GetCurrentIntent());
         TransitionTo(CombatState.PlayerDraw);
+    }
+
+    private EnemyIntent GetCurrentIntent()
+    {
+        return enemyAttackTurn
+            ? new EnemyIntent(EnemyIntentType.Attack, enemyBaseDamage)
+            : new EnemyIntent(EnemyIntentType.Defense, enemyDefenseAmount);
     }
 
     // ═══════════════════════════════════════════
@@ -84,7 +89,6 @@ public class CombatManager : MonoBehaviour
         {
             case CombatState.PlayerDraw: EnterPlayerDraw(); break;
             case CombatState.Placement:  EnterPlacement();  break;
-            case CombatState.Resolution: EnterResolution(); break;
             case CombatState.Discard:    EnterDiscard();    break;
             case CombatState.EnemyTurn:  EnterEnemyTurn();  break;
             case CombatState.Win:
@@ -115,11 +119,6 @@ public class CombatManager : MonoBehaviour
         GameEvents.RaisePlacementPhaseStarted();
     }
 
-    private void EnterResolution()
-    {
-        StartCoroutine(ResolutionRoutine());
-    }
-
     private void EnterDiscard()
     {
         int excess = Mathf.Max(0, deckManager.Hand.Count - deckManager.TargetHandSize);
@@ -139,43 +138,35 @@ public class CombatManager : MonoBehaviour
 
     // ─── Coroutines ───
 
-    private IEnumerator ResolutionRoutine()
-    {
-        yield return new WaitForSeconds(resolutionDelay);
-
-        resolutionComplete = false;
-        GameEvents.RaiseResolutionPhaseStarted();
-
-        // 블록들이 하나씩 결산 완료될 때까지 대기
-        yield return new WaitUntil(() => resolutionComplete);
-
-        yield return new WaitForSeconds(resolutionDisplayTime);
-
-        if (enemy.IsDead)
-        {
-            TransitionTo(CombatState.Win);
-            yield break;
-        }
-
-        bool needsDiscard = deckManager.Hand.Count > deckManager.TargetHandSize;
-        TransitionTo(needsDiscard ? CombatState.Discard : CombatState.EnemyTurn);
-    }
-
     private IEnumerator EnemyTurnRoutine()
     {
         GameEvents.RaiseEnemyTurnStarted();
 
+        // 적의 턴이 시작되면, 직전 방어 턴에 쌓아둔 방어도를 초기화한다.
+        enemy.ResetDefense();
+
         yield return new WaitForSeconds(enemyAttackDelay);
 
-        int damage = Mathf.Max(0, enemyBaseDamage - enemyAttackReductionNextTurn);
-        enemyAttackReductionNextTurn = 0;
-        player.TakeDamage(damage);
+        if (enemyAttackTurn)
+        {
+            int damage = Mathf.Max(0, enemyBaseDamage - enemyAttackReductionNextTurn);
+            enemyAttackReductionNextTurn = 0;
+            player.TakeDamage(damage);
+        }
+        else
+        {
+            enemy.AddDefense(enemyDefenseAmount);
+        }
+
+        enemyAttackTurn = !enemyAttackTurn;
 
         if (player.IsDead)
         {
             TransitionTo(CombatState.Lose);
             yield break;
         }
+
+        GameEvents.RaiseEnemyIntentChanged(GetCurrentIntent());
 
         yield return new WaitForSeconds(postAttackDelay);
 
@@ -201,6 +192,7 @@ public class CombatManager : MonoBehaviour
         if (enemy.IsDead) TransitionTo(CombatState.Win);
     }
 
+    // 카드 효과는 배치 즉시 결산되므로, 턴 종료 시엔 다음 페이즈(버리기/적 턴)로 바로 분기한다.
     private void HandleTurnEndRequested()
     {
         if (currentState != CombatState.Placement)
@@ -209,12 +201,8 @@ public class CombatManager : MonoBehaviour
             return;
         }
 
-        TransitionTo(CombatState.Resolution);
-    }
-
-    private void HandleResolutionComplete()
-    {
-        resolutionComplete = true;
+        bool needsDiscard = deckManager.Hand.Count > deckManager.TargetHandSize;
+        TransitionTo(needsDiscard ? CombatState.Discard : CombatState.EnemyTurn);
     }
 
     private void HandleDiscardConfirmed(IReadOnlyList<CardData> cards)

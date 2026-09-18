@@ -42,7 +42,7 @@ public class CardView : MonoBehaviour,
     private bool isPlacementPhase;
 
     private BlockGhostView ghost;
-    private int currentRotation;      // 0~3, 시계방향 90도 단위 (드래그 중 QE로 변경)
+    private int currentRotation;      // 0~3, 시계방향 90도 단위 (드래그 중 R키·우클릭으로 변경)
     private Vector2 lastDragScreenPos;
 
     // ═══════════════════════════════════════════
@@ -131,14 +131,14 @@ public class CardView : MonoBehaviour,
         RefreshPreview(eventData.position);
     }
 
-    // 드래그 중 QE로 블록 회전
+    // 드래그 중 R키·우클릭으로 블록 회전 (항상 시계방향)
     private void Update()
     {
         if (ghost == null) return;
 
-        if (Input.GetKeyDown(KeyCode.Q))
-            Rotate(-1);
-        else if (Input.GetKeyDown(KeyCode.E))
+        if (Input.GetKeyDown(KeyCode.R))
+            Rotate(1);
+        else if (Input.GetMouseButtonDown(1))
             Rotate(1);
     }
 
@@ -155,13 +155,10 @@ public class CardView : MonoBehaviour,
 
         if (gx >= 0)
         {
-            bool canPlace = gridManager.CanPlaceBlock(currentCardData, gx, gy, currentRotation);
-            ghost.SetValidity(canPlace);
             gridView.ShowPreview(currentCardData, gx, gy, currentRotation);
         }
         else
         {
-            ghost.SetValidity(false);
             gridView.ClearPreview();
         }
     }
